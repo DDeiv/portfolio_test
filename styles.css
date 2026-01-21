@@ -1,0 +1,119 @@
+@font-face {
+    font-family: "Funnel";
+    src: url(Fonts/FunnelDisplay-VariableFont_wght.ttf);
+}
+
+@font-face {
+    font-family: "Switzer";
+    src: url(Fonts/Switzer-Variable.ttf);
+}
+
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: "Switzer";
+    background: rgb(255, 255, 255);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.text-container {
+    position: relative;
+    padding: 40px;
+    line-height: 1.6;
+    z-index: 2;
+    max-width: 800px;
+    margin: 0;  /* Keeping original alignment for desktop */
+    word-spacing: 5px;
+    font-size: 16px;
+}
+
+.falling-word {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+    font-family: "Switzer";
+    font-weight: 400;
+    font-size: 16px;
+    transition: transform 0s linear;
+    color: #606060;
+    transform-origin: left top;
+    letter-spacing: 0.02em;
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .text-container {
+        max-width: 100%;
+        padding: 18px;
+        font-size: 16px;
+        word-spacing: 3px;
+        margin: 0 auto; 
+        height: 100vh; 
+        box-sizing: border-box;
+        display: block; 
+        padding-top: 50vh; 
+        transform: translateY(-50%);
+        text-align: left; 
+    }
+}
+
+.word {
+    display: inline-block; /* Keep words inline */
+    cursor: pointer;
+    position: relative;
+    letter-spacing: 0.02em;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.static {
+    color: #717171;
+    transition: opacity 2s ease-in;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.highlight {
+    color: #0080ff;
+    font-weight: 400;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.highlight:hover,
+.highlight:active {
+    text-decoration: underline;
+}
+
+.falling-word {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+    font-family: "Switzer";
+    font-weight: 400;
+    font-size: 16px;
+    transition: transform 0s linear;
+    color: #606060;
+    transform-origin: left top;
+    letter-spacing: 0.02em;
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+.original-hidden {
+    opacity: 0;
+    transition: opacity 0.1s ease-out;
+}
+
+    
