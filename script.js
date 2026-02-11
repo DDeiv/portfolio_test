@@ -1,12 +1,12 @@
 const Engine = Matter.Engine,
-      Runner = Matter.Runner,
-      Bodies = Matter.Bodies,
-      World = Matter.World;
+    Runner = Matter.Runner,
+    Bodies = Matter.Bodies,
+    World = Matter.World;
 
 
 const engine = Engine.create({
     timing: {
-        timeScale: 0.85, 
+        timeScale: 0.85,
         delta: 1000 / 60
     }
 });
@@ -14,9 +14,9 @@ const runner = Runner.create();
 
 const setGravity = () => {
     const isChrome = navigator.userAgent.indexOf('Chrome') > -1;
-    engine.world.gravity.y = isChrome ? 
-        (window.innerWidth <= 768 ? 1.0 : 0.6) : 
-        (window.innerWidth <= 768 ? 2.0 : 1.3);  
+    engine.world.gravity.y = isChrome ?
+        (window.innerWidth <= 768 ? 1.0 : 0.6) :
+        (window.innerWidth <= 768 ? 2.0 : 1.3);
 };
 setGravity();
 
@@ -28,10 +28,10 @@ const createGround = () => {
         window.innerHeight - 10,
         window.innerWidth,
         60,
-        { 
+        {
             isStatic: true,
-            friction: 0.85, 
-            restitution: 0.15 
+            friction: 0.85,
+            restitution: 0.15
         }
     );
 };
@@ -41,23 +41,21 @@ World.add(engine.world, [ground]);
 
 const links = {
     'Politecnico di Milano': 'https://www.design.polimi.it/',
-    'Davide Bocchi': 'mailto:davidebocchi@icloud.com',
+    'Davide': 'mailto:davidebocchi@icloud.com',
     'Audience Zero': 'https://www.audiencezero.com',
-    'vivilecanarie.com': 'https://vivilecanarie.webflow.io',
-    'corsedimoto.com': 'https://www.corsedimoto.com/',
-    'Contact': 'mailto:davidebocchi@icloud.com',
-    'Soup.fm': 'https://www.instagram.com/soupfm.love/',
-    'Here': '/lavori.html',
+    'Corsedimoto.com': 'https://www.corsedimoto.com/',
+    'contact': 'mailto:davidebocchi@icloud.com',
+    'here': 'lavori.html',
 };
 
-const text = `Hi! I'm (Davide Bocchi), an all-around visual designer with a current focus on front end development. With a Bachelor's in Communication Design from (Politecnico di Milano). After a year of freelancing, I've had the chance to work with some awesome clients, including (Audience Zero), where I keep websites running smoothly and looking sharp. I also dove into solo web design projects like (vivilecanarie.com). Lately, I've been collaborating with (corsedimoto.com), working on their website and taking the brand further into the world of YouTube. I'm also co-founder and visual designer of (Soup.fm), a cultural project that made around 2500 people gather in 2024 and it's still going strong. 
-(Here) you can see some of my work. (Contact) me if you want to grab a coffee or a beer and talk about your feelings or even hire me :]`;
+const text = 'Hello there! I’m (Davide), I’m a visual designer who codes, exploring AI. After graduating in communication design at (Politecnico di Milano) I worked for three years as a freelancer collaborating with (Audience Zero) and (Corsedimoto.com) and delivering some solo projects. In the meantime I dedicated some time in cofounding a music and art events collective. You can check some of my works (here). If you want to grab a coffee and talk about your feelings or just hire me you can (contact) me whenever :]';
+
 
 function parseText(text) {
     const parts = [];
     let buffer = '';
     let inParens = false;
-    
+
     for (let i = 0; i < text.length; i++) {
         const char = text[i];
         if (char === '(') {
@@ -85,7 +83,7 @@ function parseText(text) {
 const container = document.getElementById('textContainer');
 let fallingWords = new Set();
 let fallenBodies = new Set();
-let wordsMap = new Map(); 
+let wordsMap = new Map();
 
 let touchActive = false;
 let touchX = 0;
@@ -106,19 +104,19 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         bodyHeight,
         {
             restitution: isChrome ? 0.15 : (isMobile ? 0.2 : 0.3),
-            friction: isChrome ? 0.85 : 0.8, 
-            frictionAir: isChrome ? (isMobile ? 0.04 : 0.025) : (isMobile ? 0.02 : 0.01), 
+            friction: isChrome ? 0.85 : 0.8,
+            frictionAir: isChrome ? (isMobile ? 0.04 : 0.025) : (isMobile ? 0.02 : 0.01),
             angle: 0,
-            density: isChrome ? (isMobile ? 0.003 : 0.0015) : (isMobile ? 0.002 : 0.001) 
+            density: isChrome ? (isMobile ? 0.003 : 0.0015) : (isMobile ? 0.002 : 0.001)
         }
     );
-    
-    const velocityFactor = isChrome ? 0.7 : 1; 
-    Matter.Body.setVelocity(body, { 
-        x: velocityX * velocityFactor, 
-        y: velocityY * velocityFactor 
+
+    const velocityFactor = isChrome ? 0.7 : 1;
+    Matter.Body.setVelocity(body, {
+        x: velocityX * velocityFactor,
+        y: velocityY * velocityFactor
     });
-    
+
     World.add(engine.world, body);
     fallenBodies.add(body);
 
@@ -131,7 +129,7 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
     fallingWords.add(wordElement);
 
     let lastTimestamp = 0;
-    const minFrameTime = 16; 
+    const minFrameTime = 16;
     let rafId;
 
     function updatePosition(timestamp) {
@@ -139,19 +137,19 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
             cancelAnimationFrame(rafId);
             return;
         }
-        
+
         lastTimestamp = timestamp;
         const deltaX = body.position.x - bodyX;
         const deltaY = body.position.y - bodyY;
         const rotation = body.angle * (180 / Math.PI);
-        
+
         if (isChrome) {
             wordElement.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) rotate(${rotation}deg)`;
         } else {
             wordElement.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
         }
-        
-        const velocityThreshold = 0.03; 
+
+        const velocityThreshold = 0.03;
         if (Math.abs(body.velocity.x) > velocityThreshold || Math.abs(body.velocity.y) > velocityThreshold) {
             rafId = requestAnimationFrame(updatePosition);
         } else {
@@ -159,7 +157,7 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
             cancelAnimationFrame(rafId);
         }
     }
-    
+
     rafId = requestAnimationFrame(updatePosition);
 }
 
@@ -167,40 +165,40 @@ function checkWordInSwipePath(wordElement, currentX, currentY) {
     if (wordElement.classList.contains('original-hidden')) {
         return false;
     }
-    
+
     const rect = wordElement.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     const distance = Math.sqrt(
-        Math.pow(currentX - centerX, 2) + 
+        Math.pow(currentX - centerX, 2) +
         Math.pow(currentY - centerY, 2)
     );
-    
-    const proximityThreshold = Math.max(rect.width, 40); 
-    
+
+    const proximityThreshold = Math.max(rect.width, 40);
+
     if (distance <= proximityThreshold) {
         const dx = currentX - touchX;
         const dy = currentY - touchY;
         const magnitude = Math.sqrt(dx * dx + dy * dy);
-        
+
         let vx = 0, vy = 0;
         if (magnitude > 5) {
-            const speedFactor = 5; 
+            const speedFactor = 5;
             vx = (dx / magnitude) * speedFactor;
             vy = (dy / magnitude) * speedFactor;
         }
-        
+
         createFallingWord(wordElement.textContent, rect, vx, vy);
         wordElement.classList.add('original-hidden');
-        
+
         setTimeout(() => {
             wordElement.classList.remove('original-hidden');
         }, 5000);
-        
+
         return true;
     }
-    
+
     return false;
 }
 
@@ -210,34 +208,34 @@ function setupSwipeHandling() {
             touchActive = true;
             touchX = e.touches[0].clientX;
             touchY = e.touches[0].clientY;
-            
+
             wordsMap.forEach((wordEl) => {
                 if (wordEl.classList.contains('static') && !wordEl.classList.contains('original-hidden')) {
                     checkWordInSwipePath(wordEl, touchX, touchY);
                 }
             });
         });
-        
+
         document.addEventListener('touchmove', (e) => {
             if (!touchActive) return;
-            
+
             const currentX = e.touches[0].clientX;
             const currentY = e.touches[0].clientY;
-            
+
             wordsMap.forEach((wordEl) => {
                 if (wordEl.classList.contains('static') && !wordEl.classList.contains('original-hidden')) {
                     checkWordInSwipePath(wordEl, currentX, currentY);
                 }
             });
-            
+
             touchX = currentX;
             touchY = currentY;
         });
-        
+
         document.addEventListener('touchend', () => {
             touchActive = false;
         });
-        
+
         document.addEventListener('touchcancel', () => {
             touchActive = false;
         });
@@ -257,35 +255,35 @@ segments.forEach((segment) => {
         const textNode = document.createTextNode(segment.text);
         const wrapper = document.createElement('span');
         wrapper.className = 'static';
-        
+
         const words = segment.text.split(/(\s+)/);
         words.forEach(word => {
             if (!/^\s+$/.test(word)) {
                 const span = document.createElement('span');
                 span.textContent = word;
                 span.className = 'word static';
-                
+
                 wordsMap.set(span.textContent + Math.random(), span);
-                
+
                 let interactionTimeout;
                 let touchStartTime;
-                
+
                 const handleWordFall = (velocityX = 0, velocityY = 0) => {
                     if (!span.classList.contains('original-hidden')) {
                         if (interactionTimeout) {
                             clearTimeout(interactionTimeout);
                         }
-                        
+
                         const rect = span.getBoundingClientRect();
                         createFallingWord(span.textContent, rect, velocityX, velocityY);
                         span.classList.add('original-hidden');
-                        
+
                         interactionTimeout = setTimeout(() => {
                             span.classList.remove('original-hidden');
                         }, 5000);
                     }
                 };
-                
+
                 let mouseEnterTimer;
                 span.addEventListener('mouseenter', () => {
                     mouseEnterTimer = setTimeout(() => handleWordFall(), 10);
@@ -293,8 +291,8 @@ segments.forEach((segment) => {
                 span.addEventListener('mouseleave', () => {
                     if (mouseEnterTimer) clearTimeout(mouseEnterTimer);
                 });
-                
-                
+
+
                 if (window.innerWidth <= 768) {
                     span.addEventListener('touchstart', (e) => {
                         e.preventDefault();
@@ -302,17 +300,17 @@ segments.forEach((segment) => {
                         touchStartX = e.touches[0].clientX;
                         touchStartY = e.touches[0].clientY;
                     });
-                    
+
                     span.addEventListener('touchend', (e) => {
                         e.preventDefault();
                         const touchEndX = e.changedTouches[0].clientX;
                         const touchEndY = e.changedTouches[0].clientY;
-                        
+
                         const touchDuration = Date.now() - touchStartTime;
                         const deltaX = touchEndX - touchStartX;
                         const deltaY = touchEndY - touchStartY;
                         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                        
+
                         // If it's a swipe (fast movement over sufficient distance)
                         if (touchDuration < 300 && distance > 30) {
                             const speed = distance / touchDuration;
@@ -328,7 +326,7 @@ segments.forEach((segment) => {
                         }
                     });
                 }
-                
+
                 container.appendChild(span);
             } else {
                 container.appendChild(document.createTextNode(word));
@@ -343,14 +341,14 @@ function handleResize() {
     ground = createGround();
     World.add(engine.world, [ground]);
     setGravity();
-    
+
     fallenBodies.forEach(body => {
         if (body && body.isStatic) {
             body.isStatic = false;
         }
     });
-    
-  
+
+
 
 }
 

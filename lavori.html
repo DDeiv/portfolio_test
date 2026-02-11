@@ -1,378 +1,523 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio</title>
+    <title>Lavori - Davide Bocchi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        * {
+        body {
             margin: 0;
-            padding: 0;
+            font-family: "Inter", sans-serif;
+            background: rgb(255, 255, 255);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .layout {
+            display: flex;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 320px;
+            padding: 40px;
+            border-right: 1px solid #717171;
+            overflow-y: auto;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #ffffff;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 95%;
-            margin: 0 auto;
-            padding: 100px 0px;
-        }
-
-        .portfolio-row {
+        .back-button {
+            margin-top: auto;
+            padding-top: 40px;
+            text-decoration: none;
+            color: #0080ff;
+            font-size: 16px;
             display: flex;
-            gap: 20px;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+            text-transform: uppercase;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        .back-button:hover {
+            opacity: 0.7;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .section {
             margin-bottom: 20px;
-            align-items: stretch;
         }
 
-        .portfolio-item {
-            overflow: hidden;
+        .section-title {
+            color: #717171;
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+
+        .section-links {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .section-links a {
+            color: #0080ff;
+            font-size: 16px;
+            font-weight: 400;
+            text-decoration: none;
+            letter-spacing: 0.02em;
             cursor: pointer;
-            position: relative;
-            flex-shrink: 0;
         }
 
-        .portfolio-item:hover {
-
+        .section-links a:hover {
+            text-decoration: underline;
         }
 
-        .portfolio-item img {
+        .section-links span {
+            color: #717171;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .project-details {
+            display: none;
             width: 100%;
-            height: 100%;
-            object-fit: contain;
+            max-width: 844px;
+            /* Calculated: 350 * (605/1024 + 1024/581) + 20 ≈ 844px */
+        }
+
+        .project-details.active {
             display: block;
         }
 
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            border: none;
-            outline: none;
+        .project-details p {
+            color: #717171;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
+            letter-spacing: 0.02em;
         }
-        
-        .video-container iframe {
+
+        .project-details .highlight-blue {
+            color: #0080ff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .project-details .highlight-blue:hover {
+            text-decoration: underline;
+        }
+
+        .image-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .image-box {
+            border: 2px solid #717171;
+            /* Match text color */
+            background: #fff;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+            height: 350px;
+            /* Fixed height for consistent look */
+        }
+
+        .image-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scale(1.01);
-            border: none;
-            outline: none;
+            display: block;
         }
-        
-        .video-container video {
+
+        .video-stack {
+            display: flex;
+            flex-direction: row;
+            gap: 0;
+            width: calc(100% + 80px);
+            /* Fill the 40px left/right padding */
+            margin-left: -40px;
+            margin-right: -40px;
+        }
+
+        .video-stack video {
+            width: 50%;
+            height: auto;
+            display: block;
+        }
+
+        #corsedimoto {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        #corsedimoto p {
+            max-width: 844px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .project-details p+.video-stack {
+            margin-top: -20px;
+        }
+
+        .youtube-container {
+            max-width: 844px;
+            margin: 40px auto;
+            width: 100%;
+        }
+
+        .youtube-container iframe {
+            aspect-ratio: 16 / 8.28;
+            width: 100%;
+            height: auto;
+            border: 2px solid #717171;
+            box-sizing: border-box;
+        }
+
+        .source-text {
+            font-size: 14px;
+            color: #717171;
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .source-text a {
+            color: #0080ff;
+            text-decoration: none;
+        }
+
+        .source-text a:hover {
+            text-decoration: underline;
+        }
+
+        .youtube-row {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 844px;
+            margin: 40px auto;
+            width: 100%;
+        }
+
+        .youtube-row iframe {
+            flex: 1;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            height: auto;
+            border: 2px solid #717171;
+            box-sizing: border-box;
+        }
+
+        .pdf-container {
+            width: 100%;
+            height: 80vh;
+            max-width: 844px;
+            margin: 20px auto;
+            border: 2px solid #717171;
+        }
+
+        .pdf-container iframe {
             width: 100%;
             height: 100%;
-            object-fit: contain;
             border: none;
-            outline: none;
         }
 
-        .description {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            max-width: 80%;
-            text-align: center;
-            mix-blend-mode: difference; 
-            color: white;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+        /* Portrait: 605x1024 */
+        .image-box.portrait {
+            aspect-ratio: 605 / 1024;
+            flex-shrink: 0;
         }
 
-        .description.show {
-            opacity: 1;
+        /* Landscape: 1024x581 */
+        .image-box.landscape {
+            aspect-ratio: 1024 / 581;
+            flex-grow: 1;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 20px 15px;
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #717171;
+                padding: 18px;
+                height: auto;
+            }
+
+            .content {
+                padding: 18px;
+            }
+
+            .image-row {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .image-box {
+                width: 100% !important;
+                height: 200px;
             }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div id="portfolioGrid">
-            <!-- Rows will be generated by JavaScript -->
+    <div class="layout">
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">Website</div>
+                <div class="section-links">
+                    <a onclick="showProject('kaamos')">Kaamos</a>
+                    <a onclick="showProject('vivilecanarie')">Vivilecanarie</a>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Video</div>
+                <div class="section-links">
+                    <a onclick="showProject('corsedimoto')">Corsedimoto.com</a>
+                    <a onclick="showProject('university')">University</a>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Events</div>
+                <div class="section-links">
+                    <a onclick="showProject('soupfm')">Soup.fm</a>
+                    <a href="#">Link 2</a>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Graphics and visuals</div>
+                <div class="section-links">
+                    <a href="#">Link 1</a>
+                    <a href="#">Link 2</a>
+                </div>
+            </div>
+
+            <a href="index.html" class="back-button">
+                <span>←</span> BACK
+            </a>
+        </div>
+
+        <div class="content">
+            <div id="kaamos" class="project-details">
+                <p>Freelance project for a tattoo artist (KAAMOS).<br>
+                    Software used: Figma, JavaScript, HTML, CSS, Claude AI.</p>
+
+                <p>Featuring: Moving particle cloud, web3form, SEO optimisation, privacy policy and terms of service
+                    fix, responsive, CMS.</p>
+
+                <p>To open click <a href="https://kaamos.tattoo/" target="_blank" class="highlight-blue">here.</a></p>
+
+                <!-- Images placeholder -->
+                <div id="kaamos-images">
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/kaamos_portrait.jpg" alt="Kaamos Mobile">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/kaamos_landscape.jpg" alt="Kaamos Desktop">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/kaamos_about.jpg" alt="Kaamos About Info">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/kaamos_about_final.jpg" alt="Kaamos About Text">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/kaamos_previous.jpg" alt="Kaamos Previous">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/kaamos_previous_landscape.jpg" alt="Kaamos Previous Landscape">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/kaamos_vision.jpg" alt="Kaamos Vision">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/kaamos_vision_landscape.jpg" alt="Kaamos Vision Landscape">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="vivilecanarie" class="project-details">
+                <p>Freelance project for a news company in the canary islands (VIVILECANARIE).<br>
+                    Softwares used: Figma, Webflow, JavaScript.</p>
+
+                <p>Featuring: CMS, responsive design, Google Adv, SEO optimisation</p>
+
+                <p>The project ended up not being published for external issues but it still took some time.</p>
+
+                <p>to open click <a href="#" target="_blank" class="highlight-blue">here</a> (webflow.io version).</p>
+
+                <!-- Images placeholder -->
+                <div id="vivilecanarie-images">
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/vivi_portrait_2.jpg" alt="Vivi Mobile 2">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/vivi_landscape_2.jpg" alt="Vivi Desktop 2">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/vivi_portrait_1.jpg" alt="Vivi Mobile 1">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/vivi_landscape_1.jpg" alt="Vivi Desktop 1">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/vivi_portrait_3.jpg" alt="Vivi Mobile 3">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/vivi_landscape_3.jpg" alt="Vivi Desktop 3">
+                        </div>
+                    </div>
+                    <div class="image-row">
+                        <div class="image-box portrait">
+                            <img src="images/vivi_portrait_4.jpg" alt="Vivi Mobile 4">
+                        </div>
+                        <div class="image-box landscape">
+                            <img src="images/vivi_landscape_4.jpg" alt="Vivi Desktop 4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="corsedimoto" class="project-details">
+                <p>Project for motorcycle news website Corsedimoto.com.<br>
+                    Software used: Premiere, After Effects, Illustrator, Photoshop.</p>
+
+                <p>Featuring: Video editing, motion graphics, thumbnail design, social media posts.</p>
+
+                <p>For corsedimoto.com apart from webmaintainance i also worked into launching their youtube channel, to
+                    do so i created their introductory video, realised by editing together videos that they provided,
+                    and creating motion graphics.</p>
+
+
+                <!-- Videos -->
+                <div class="video-stack">
+                    <video autoplay muted loop playsinline>
+                        <source src="images/video2.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <video autoplay muted loop playsinline>
+                        <source src="images/video1.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <div class="youtube-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/uH3E7iHdIW8?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&loop=1&playlist=uH3E7iHdIW8"
+                        title="YouTube video player" frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <div id="university" class="project-details">
+                <p>Projects for University in different courses.<br>
+                    Software used: After Effects, Premiere, Photoshop, Illustrator.</p>
+
+                <p>Featuring: Video editing, motion graphics, graphic design.</p>
+
+                <p>These projects were realised for different courses, the first one is an animated brandbook for a
+                    fictional brand, the second one is just an exercise that required to animate a short story.</p>
+
+                <!-- Videos -->
+                <div class="youtube-row">
+                    <iframe
+                        src="https://www.youtube.com/embed/MFhbm8YA-EM?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&loop=1&playlist=MFhbm8YA-EM"
+                        title="YouTube video player" frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+                    <iframe
+                        src="https://www.youtube.com/embed/5fboA9ej2I4?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&loop=1&playlist=5fboA9ej2I4"
+                        title="YouTube video player" frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <div id="soupfm" class="project-details">
+                <p>Soup.fm is a collective that i cofounded in 2024 with another friend.<br>
+                    no software was used for this project</p>
+
+                <p>The project was for us an occasion to experiment with different things, from curating music, to
+                    organising events, to sharing art. In 2024 and 2025 we gathered an estimate of 6000 people in lisbon
+                    across multiple events. We mainly communicate via whatsapp, we only decided to share it on <a
+                        href="https://www.instagram.com/soupfm.love/" target="_blank"
+                        class="highlight-blue">instagram</a>
+                    before our (for now) last event. The total following across all platforms it's still arounf 2500
+                    people.</p>
+
+                <p>Out of respect for the privacy of the people that attended our events, i won't share any pictures
+                    or videos of them. a couple are anyway visible on the instagram page. Below you can still find a
+                    presentation
+                    that we shared in order to organise a party in collaboration with Those Who Dance.</p>
+
+                <!-- PDF Presentation -->
+                <div class="pdf-container">
+                    <iframe src="images/SOUP.FM%20X%20TWD.pdf#toolbar=0" type="application/pdf"></iframe>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div class="description" id="description"></div>
+    </div>
 
     <script>
-        const portfolioItems = [
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img3.jpg',
-                description: 'flier from a SOUP.FM event',
-                aspectRatio: 3/2 
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img2.jpg',
-                description: 'Flyer from a SOUP.FM art show',
-                aspectRatio: 2/3
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img1.jpg',
-                description: 'flier from a SOUP.FM event',
-                aspectRatio: 4/3
-            },
-            {
-                type: 'youtube',
-                src: 'https://www.youtube.com/embed/uH3E7iHdIW8',
-                description: 'video editing for corsedimoto.com',
-                aspectRatio: 16/9
-            },
-            {
-                type: 'video',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/video1.mp4',
-                description: 'outro logo animation for corsedimoto.com',
-                aspectRatio: 16/9
-            },
-            {
-                type: 'video',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/video2.mp4',
-                description: 'logo animation for corsedimoto.com',
-                aspectRatio: 16/9
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img4.png',
-                description: 'article page from news website',
-                aspectRatio: 1/1
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img5.png',
-                description: 'section page from news website',
-                aspectRatio: 1/1
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img6.png',
-                description: 'main page from news website',
-                aspectRatio: 1/1
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img7',
-                description: 'flyer for CCG',
-                aspectRatio: 16/10
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img8',
-                description: 'flyer for CCG',
-                aspectRatio: 4/5
-            },
-            {
-                type: 'image',
-                src: 'https://cdn.jsdelivr.net/gh/DDeiv/portfolioimages/lavori%20portfolio/img9',
-                description: 'flyer for CCG',
-                aspectRatio: 3/2
-            },
-            {
-                type: 'youtube',
-                src: 'https://www.youtube.com/embed/MFhbm8YA-EM',
-                description: 'animated brandbook for university',
-                aspectRatio: 16/9
-            },
-            {
-                type: 'youtube',
-                src: 'https://www.youtube.com/embed/5fboA9ej2I4',
-                description: 'animation for university lab',
-                aspectRatio: 16/9
-            }
-        ];
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function calculateOptimalLayout(items, containerWidth, isMobile) {
-            const gap = 20;
-            const minItemsPerRow = isMobile ? 1 : 2;
-            const maxItemsPerRow = isMobile ? 2 : 4;
-            const targetHeight = isMobile ? 200 : 300; // Base height
-            
-            const rows = [];
-            let currentIndex = 0;
-            
-            while (currentIndex < items.length) {
-                let bestRowConfig = null;
-                let bestScore = -1;
-                
-                // Try different numbers of items per row
-                for (let itemCount = minItemsPerRow; itemCount <= Math.min(maxItemsPerRow, items.length - currentIndex); itemCount++) {
-                    const rowItems = items.slice(currentIndex, currentIndex + itemCount);
-                    
-                    // Calculate what height would make these items fit the container width
-                    const totalGaps = (itemCount - 1) * gap;
-                    const availableWidth = containerWidth - totalGaps;
-                    
-                    // Calculate total width at target height
-                    const totalWidthAtTargetHeight = rowItems.reduce((sum, item) => 
-                        sum + (targetHeight * item.aspectRatio), 0);
-                    
-                    // Calculate the height needed to fill the available width
-                    const calculatedHeight = (availableWidth * targetHeight) / totalWidthAtTargetHeight;
-                    
-                    // Score this configuration (prefer heights close to target, more items when possible)
-                    const heightScore = Math.max(0, 1 - Math.abs(calculatedHeight - targetHeight) / targetHeight);
-                    const itemCountScore = itemCount / maxItemsPerRow;
-                    const score = heightScore * 0.7 + itemCountScore * 0.3;
-                    
-                    if (score > bestScore && calculatedHeight > 150 && calculatedHeight < 500) {
-                        bestScore = score;
-                        bestRowConfig = {
-                            items: rowItems,
-                            height: calculatedHeight,
-                            count: itemCount
-                        };
-                    }
-                }
-                
-                // If no good config found, use minimum items
-                if (!bestRowConfig) {
-                    const rowItems = items.slice(currentIndex, currentIndex + minItemsPerRow);
-                    bestRowConfig = {
-                        items: rowItems,
-                        height: targetHeight,
-                        count: minItemsPerRow
-                    };
-                }
-                
-                rows.push(bestRowConfig);
-                currentIndex += bestRowConfig.count;
-            }
-            
-            return rows;
-        }
-
-        function createPortfolioItem(item, width, height) {
-            const portfolioItem = document.createElement('div');
-            portfolioItem.className = 'portfolio-item';
-            portfolioItem.style.width = `${width}px`;
-            portfolioItem.style.height = `${height}px`;
-            
-            let content = '';
-            
-            switch(item.type) {
-                case 'image':
-                    content = `<img src="${item.src}" alt="Portfolio item" loading="lazy">`;
-                    break;
-                case 'video':
-                    content = `
-                        <div class="video-container">
-                            <video src="${item.src}" muted loop playsinline autoplay></video>
-                        </div>
-                    `;
-                    break;
-                case 'youtube':
-                    content = `
-                        <div class="video-container">
-                            <iframe src="${item.src}?autoplay=1&mute=1&loop=1&playlist=${item.src.split('/').pop()}&controls=0&modestbranding=1&showinfo=0&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>
-                    `;
-                    break;
-            }
-            
-            portfolioItem.innerHTML = content;
-            
-            // Add hover events
-            portfolioItem.addEventListener('mouseenter', () => showDescription(item.description));
-            portfolioItem.addEventListener('mouseleave', hideDescription);
-            
-            // Add click event for videos to play/pause
-            if (item.type === 'video') {
-                const video = portfolioItem.querySelector('video');
-                portfolioItem.addEventListener('click', () => {
-                    if (video.paused) {
-                        video.play();
-                    } else {
-                        video.pause();
-                    }
-                });
-            }
-            
-            return portfolioItem;
-        }
-
-        function showDescription(text) {
-            const description = document.getElementById('description');
-            description.textContent = text;
-            description.classList.add('show');
-        }
-
-        function hideDescription() {
-            const description = document.getElementById('description');
-            description.classList.remove('show');
-        }
-
-        function renderPortfolio() {
-            const grid = document.getElementById('portfolioGrid');
-            const containerWidth = grid.offsetWidth;
-            const isMobile = window.innerWidth <= 768;
-            
-            // Clear existing content
-            grid.innerHTML = '';
-            
-            // Shuffle items
-            const shuffledItems = shuffleArray([...portfolioItems]);
-            
-            // Calculate optimal layout
-            const rows = calculateOptimalLayout(shuffledItems, containerWidth, isMobile);
-            
-            // Create rows
-            rows.forEach(rowConfig => {
-                const row = document.createElement('div');
-                row.className = 'portfolio-row';
-                
-                const gap = 20;
-                const totalGaps = (rowConfig.items.length - 1) * gap;
-                const availableWidth = containerWidth - totalGaps;
-                
-                rowConfig.items.forEach(item => {
-                    const itemWidth = rowConfig.height * item.aspectRatio;
-                    const portfolioItem = createPortfolioItem(item, itemWidth, rowConfig.height);
-                    row.appendChild(portfolioItem);
-                });
-                
-                grid.appendChild(row);
+        function showProject(id) {
+            // Hide all projects
+            document.querySelectorAll('.project-details').forEach(el => {
+                el.classList.remove('active');
             });
+
+            // Show selected project
+            const project = document.getElementById(id);
+            if (project) {
+                project.classList.add('active');
+            }
         }
-
-        // Initialize and handle resize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderPortfolio();
-        });
-
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(renderPortfolio, 250);
-        });
     </script>
 </body>
+
 </html>
