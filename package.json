@@ -10,10 +10,10 @@
     "deploy": "gh-pages -d dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "https://DDeiv.github.io/portfolio/",
+  "homepage": "https://DDeiv.github.io/portfolio_test/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DDeiv/portfolio.git"
+    "url": "git+https://github.com/DDeiv/portfolio_test.git"
   },
   "keywords": [],
   "author": "",
