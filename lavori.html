@@ -307,22 +307,59 @@
                 width: 100%;
                 border-right: none;
                 border-bottom: 1px solid #717171;
-                padding: 18px;
+                padding: 24px;
                 height: auto;
+                background: #fff;
+                z-index: 10;
             }
 
             .content {
-                padding: 18px;
+                padding: 24px;
+                min-height: 50vh;
+            }
+
+            .section-links a {
+                padding: 8px 0;
+                display: block;
             }
 
             .image-row {
                 flex-direction: column;
+                gap: 20px;
                 height: auto;
             }
 
             .image-box {
                 width: 100% !important;
-                height: 200px;
+                height: auto !important;
+                aspect-ratio: auto !important;
+                border: none;
+            }
+
+            .image-box img {
+                position: relative;
+                height: auto;
+                width: 100%;
+            }
+
+            .video-stack {
+                flex-direction: column;
+                width: 100%;
+                margin: 0;
+            }
+
+            .video-stack video {
+                width: 100%;
+            }
+
+            .video-container-single {
+                max-width: 100%;
+            }
+
+            /* Sticky Back Button for better Mobile UX */
+            .back-button {
+                padding-top: 20px;
+                padding-bottom: 10px;
             }
         }
     </style>
@@ -694,6 +731,13 @@
                     obj.data = obj.getAttribute('data-data');
                     obj.removeAttribute('data-data');
                 });
+
+                // Mobile UX: Scroll to content
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        project.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
             }
         }
     </script>
