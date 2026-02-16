@@ -362,13 +362,39 @@
                 padding-top: 20px;
                 padding-bottom: 10px;
             }
+
+            .mobile-menu-btn {
+                display: none;
+                /* Hidden by default, shown via JS when project active */
+                width: 100%;
+                padding: 20px;
+                background: white;
+                border: none;
+                border-top: 1px solid #717171;
+                color: #0080ff;
+                /* Match link color */
+                font-family: "Inter", sans-serif;
+                font-size: 16px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                text-align: center;
+            }
+        }
+
+        /* Desktop: Always hide trigger button */
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none !important;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="layout">
-        <div class="sidebar">
+        <button id="mobile-menu-btn" class="mobile-menu-btn" onclick="toggleMobileMenu()">MORE WORKS</button>
+        <div class="sidebar" id="sidebar">
             <div class="section">
                 <div class="section-title">Website</div>
                 <div class="section-links">
@@ -733,11 +759,27 @@
                     obj.removeAttribute('data-data');
                 });
 
-                // Mobile UX: Scroll to top since content is now above menu
+                // Mobile UX: 
                 if (window.innerWidth <= 768) {
+                    // Scroll to top since content is now above menu
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    // Hide sidebar, show "More Works" button
+                    document.getElementById('sidebar').style.display = 'none';
+                    document.getElementById('mobile-menu-btn').style.display = 'block';
                 }
             }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('mobile-menu-btn');
+
+            // Show sidebar
+            sidebar.style.display = 'flex';
+
+            // Hide button
+            btn.style.display = 'none';
         }
     </script>
 </body>
