@@ -205,6 +205,19 @@
             text-align: left;
         }
 
+        .video-container-single {
+            max-width: 422px;
+            margin: 40px auto;
+            width: 100%;
+            border: 2px solid #717171;
+            box-sizing: border-box;
+        }
+
+        .video-container-single video {
+            width: 100%;
+            display: block;
+        }
+
         .source-text a {
             color: #0080ff;
             text-decoration: none;
@@ -256,6 +269,32 @@
         .image-box.landscape {
             aspect-ratio: 1024 / 581;
             flex-grow: 1;
+        }
+
+        .flyer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .flyer-box {
+            width: 100%;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .flyer-box img,
+        .flyer-box video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .flyer-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
@@ -311,15 +350,15 @@
                 <div class="section-title">Events</div>
                 <div class="section-links">
                     <a onclick="showProject('soupfm')">Soup.fm</a>
-                    <a href="#">Link 2</a>
+                    <a onclick="showProject('vicentina')">Vicentina Foundation</a>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-title">Graphics and visuals</div>
                 <div class="section-links">
-                    <a href="#">Link 1</a>
-                    <a href="#">Link 2</a>
+                    <a onclick="showProject('flyers')">Flyers</a>
+                    <a onclick="showProject('touchdesigner')">TouchDesigner</a>
                 </div>
             </div>
 
@@ -333,10 +372,11 @@
                 <p>Freelance project for a tattoo artist (KAAMOS).<br>
                     Software used: Figma, JavaScript, HTML, CSS, Claude AI.</p>
 
-                <p>Featuring: Moving particle cloud, web3form, SEO optimisation, privacy policy and terms of service
-                    fix, responsive, CMS.</p>
+                <p>Featuring: moving particle cloud, web3forms, SEO optimization, privacy policy and terms of service
+                    fix, responsive design, and CMS.</p>
 
-                <p>To open click <a href="https://kaamos.tattoo/" target="_blank" class="highlight-blue">here.</a></p>
+                <p>To open, click <a href="https://ddeiv.github.io/kaamos/" target="_blank"
+                        class="highlight-blue">here</a>.</p>
 
                 <!-- Images placeholder -->
                 <div id="kaamos-images">
@@ -376,14 +416,16 @@
             </div>
 
             <div id="vivilecanarie" class="project-details">
-                <p>Freelance project for a news company in the canary islands (VIVILECANARIE).<br>
-                    Softwares used: Figma, Webflow, JavaScript.</p>
+                <p>Freelance project for a news company in the Canary Islands (ViviLeCanarie).<br>
+                    Software used: Figma, Webflow, JavaScript.</p>
 
-                <p>Featuring: CMS, responsive design, Google Adv, SEO optimisation</p>
+                <p>Featuring: CMS, responsive design, Google Ads, SEO optimization.</p>
 
-                <p>The project ended up not being published for external issues but it still took some time.</p>
+                <p>The project was ultimately not published due to external issues, but it still represents a
+                    significant time investment.</p>
 
-                <p>to open click <a href="#" target="_blank" class="highlight-blue">here</a> (webflow.io version).</p>
+                <p>To open, click <a href="https://vivilecanarie.webflow.io" target="_blank"
+                        class="highlight-blue">here</a> (webflow.io version).</p>
 
                 <!-- Images placeholder -->
                 <div id="vivilecanarie-images">
@@ -423,13 +465,16 @@
             </div>
 
             <div id="corsedimoto" class="project-details">
-                <p>Project for motorcycle news website Corsedimoto.com.<br>
+                <p>Project for a motorcycle news website (<a href="https://www.corsedimoto.com/" target="_blank"
+                        class="highlight-blue"></a>Corsedimoto.com</a>).<br>
                     Software used: Premiere, After Effects, Illustrator, Photoshop.</p>
 
-                <p>Featuring: Video editing, motion graphics, thumbnail design, social media posts.</p>
+                <p>Featuring: video editing, motion graphics, thumbnail design, social media posts.</p>
 
-                <p>For corsedimoto.com apart from webmaintainance i also worked into launching their youtube channel, to
-                    do so i created their introductory video, realised by editing together videos that they provided,
+                <p>For <a href="https://www.corsedimoto.com/" target="_blank"
+                        class="highlight-blue">Corsedimoto.com</a>, apart from web maintenance, I also worked on
+                    launching their YouTube channel; to
+                    do so, I created their introductory video, realized by editing together videos that they provided
                     and creating motion graphics.</p>
 
 
@@ -455,13 +500,13 @@
             </div>
 
             <div id="university" class="project-details">
-                <p>Projects for University in different courses.<br>
+                <p>Projects for the university in different courses (Politecnico di Milano).<br>
                     Software used: After Effects, Premiere, Photoshop, Illustrator.</p>
 
-                <p>Featuring: Video editing, motion graphics, graphic design.</p>
+                <p>Featuring: video editing, motion graphics, graphic design.</p>
 
-                <p>These projects were realised for different courses, the first one is an animated brandbook for a
-                    fictional brand, the second one is just an exercise that required to animate a short story.</p>
+                <p>These projects were realized for various courses; the first one is an animated brand book for a
+                    fictional brand, and the second one is an exercise that required animating a short story.</p>
 
                 <!-- Videos -->
                 <div class="youtube-row">
@@ -479,29 +524,133 @@
             </div>
 
             <div id="soupfm" class="project-details">
-                <p>Soup.fm is a collective that i cofounded in 2024 with another friend.<br>
-                    no software was used for this project</p>
+                <p>Soup.fm is a collective that I cofounded in 2024 with a friend.</p>
 
-                <p>The project was for us an occasion to experiment with different things, from curating music, to
-                    organising events, to sharing art. In 2024 and 2025 we gathered an estimate of 6000 people in lisbon
-                    across multiple events. We mainly communicate via whatsapp, we only decided to share it on <a
+                <p>The project was for us an occasion to experiment with different things, from curating music to
+                    organizing events and sharing art. In 2024 and 2025, we gathered an estimated 6,000 people in Lisbon
+                    across multiple events. We mainly communicate via WhatsApp; we only decided to share it on <a
                         href="https://www.instagram.com/soupfm.love/" target="_blank"
-                        class="highlight-blue">instagram</a>
-                    before our (for now) last event. The total following across all platforms it's still arounf 2500
+                        class="highlight-blue">Instagram</a>
+                    before our (for now) last event. The total following across all platforms is still around 2,500
                     people.</p>
 
-                <p>Out of respect for the privacy of the people that attended our events, i won't share any pictures
-                    or videos of them. a couple are anyway visible on the instagram page. Below you can still find a
+                <p>Out of respect for the privacy of the people who attended our events, I won't share any pictures
+                    or videos of them; some are, nonetheless, visible on the Instagram page. Below you can find a
                     presentation
-                    that we shared in order to organise a party in collaboration with Those Who Dance.</p>
+                    that we shared in order to organize a party in collaboration with Those Who Dance.</p>
 
                 <!-- PDF Presentation -->
                 <div class="pdf-container">
-                    <iframe src="images/SOUP.FM%20X%20TWD.pdf#toolbar=0" type="application/pdf"></iframe>
+                    <object data="images/SOUP.FM%20X%20TWD.pdf#toolbar=0&navpanes=0&view=FitW" type="application/pdf"
+                        width="100%" height="100%">
+                        <p>Your browser does not support PDFs. <a href="images/SOUP.FM%20X%20TWD.pdf">Download the
+                                PDF</a>.</p>
+                    </object>
+                </div>
+            </div>
+
+            <div id="vicentina" class="project-details">
+                <p>Project for a non-profit ecological awareness foundation (<a
+                        href="https://www.instagram.com/vicentinafoundation/" target="_blank"
+                        class="highlight-blue"></a>Vicentina Foundation</a>).</p>
+
+                <p>In collaboration with <a href="https://www.instagram.com/fluidolisboa/" target="_blank"
+                        class="highlight-blue">Fluido Lisboa</a>, we curated the launch event for the Vicentina
+                    Foundation. The
+                    event was an art exhibition in Lisbon, divided into various moments throughout the day with
+                    different
+                    shows, performances, and installations.</p>
+
+                <!-- Video Embed -->
+                <div class="video-container-single">
+                    <video autoplay muted loop playsinline>
+                        <source src="images/WhatsApp Video 2026-02-16 at 14.17.53-2.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <!-- Images placeholder -->
+                <div id="vicentina-images">
+                    <div class="image-row">
+                        <!-- Add project images here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="flyers" class="project-details">
+                <p>Graphic design for various events.<br>
+                    Software used: Photoshop, Illustrator.</p>
+
+                <p>Collection of flyers and visual communication materials.</p>
+
+                <!-- Images placeholder -->
+                <div id="flyers-images">
+                    <div class="flyer-grid">
+                        <div class="flyer-box">
+                            <img src="images/flyer 1.jpg" alt="Flyer 1">
+                        </div>
+                        <div class="flyer-box">
+                            <img src="images/flyer 2.jpg" alt="Flyer 2">
+                        </div>
+                        <div class="flyer-box">
+                            <img src="images/flyer 3.jpg" alt="Flyer 3">
+                        </div>
+                        <div class="flyer-box">
+                            <img src="images/flyer 4.jpg" alt="Flyer 4">
+                        </div>
+                        <div class="flyer-box">
+                            <img src="images/flyer 5.jpg" alt="Flyer 5">
+                        </div>
+                        <div class="flyer-box">
+                            <img src="images/flyer 6.jpg" alt="Flyer 6">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="touchdesigner" class="project-details">
+                <p>Generative audio-responsive visuals (Personal project).<br>
+                    Software used: TouchDesigner.</p>
+
+                <p>Experimental generative audio-responsive visuals for live performances and personal use.</p>
+
+                <!-- Video/Image placeholder -->
+                <div id="td-content">
+                    <div class="flyer-grid">
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%206-1.mov">
+                            </video>
+                        </div>
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%201-1.mov">
+                            </video>
+                        </div>
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%202-1.mov">
+                            </video>
+                        </div>
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%203-1.mov">
+                            </video>
+                        </div>
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%204-1.mov">
+                            </video>
+                        </div>
+                        <div class="flyer-box">
+                            <video autoplay muted loop playsinline>
+                                <source src="images/visual%205-1.mov">
+                            </video>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 
     <script>

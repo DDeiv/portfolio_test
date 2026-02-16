@@ -48,7 +48,7 @@ const links = {
     'here': 'lavori.html',
 };
 
-const text = 'Hello there! I’m (Davide), I’m a visual designer who codes, exploring AI. After graduating in communication design at (Politecnico di Milano) I worked for three years as a freelancer collaborating with (Audience Zero) and (Corsedimoto.com) and delivering some solo projects. In the meantime I dedicated some time in cofounding a music and art events collective. You can check some of my works (here). If you want to grab a coffee and talk about your feelings or just hire me you can (contact) me whenever :]';
+const text = 'Hello there! I’m (Davide), I’m a visual designer who codes, exploring AI. After graduating in communication design at (Politecnico di Milano), I worked for three years as a freelancer, collaborating with (Audience Zero) and (Corsedimoto.com) while delivering solo projects. In the meantime, I dedicated time to cofounding a music and art events collective. You can check some of my work (here). If you want to grab a coffee and talk about your feelings or just hire me, you can (contact) me whenever :]';
 
 
 function parseText(text) {
