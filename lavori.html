@@ -300,13 +300,14 @@
 
         @media (max-width: 768px) {
             .layout {
-                flex-direction: column;
+                flex-direction: column-reverse;
             }
 
             .sidebar {
                 width: 100%;
                 border-right: none;
-                border-bottom: 1px solid #717171;
+                border-top: 1px solid #717171;
+                border-bottom: none;
                 padding: 24px;
                 height: auto;
                 background: #fff;
@@ -732,11 +733,9 @@
                     obj.removeAttribute('data-data');
                 });
 
-                // Mobile UX: Scroll to content
+                // Mobile UX: Scroll to top since content is now above menu
                 if (window.innerWidth <= 768) {
-                    setTimeout(() => {
-                        project.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
         }
