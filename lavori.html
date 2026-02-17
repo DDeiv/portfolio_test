@@ -882,10 +882,12 @@
                     // Update mobile header title
                     const title = project.getAttribute('data-title') || projectNames[id] || id;
                     document.getElementById('mobile-project-title').textContent = title;
-
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'instant' });
                 }
+
+                // Always reset scroll position when opening a new project
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                const contentEl = document.querySelector('.content');
+                if (contentEl) contentEl.scrollTop = 0;
             }
         }
 
