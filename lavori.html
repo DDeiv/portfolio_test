@@ -296,8 +296,7 @@
            MOBILE-ONLY ELEMENTS
            Hidden on desktop
            ======================== */
-        .mobile-header,
-        .mobile-more-works-btn {
+        .mobile-header {
             display: none;
         }
 
@@ -386,10 +385,6 @@
                 display: none;
             }
 
-            body.project-open .mobile-more-works-btn {
-                display: block;
-            }
-
             body.project-open .mobile-header-title {
                 display: block;
             }
@@ -403,28 +398,14 @@
                 display: none;
             }
 
-            body:not(.project-open) .mobile-header-back {
-                /* Only show ← BACK, hide project title */
+            /* --- Text wrapping fix for mobile --- */
+            .project-details p {
+                word-break: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
             }
 
-            /* --- "More Works" Button --- */
-            .mobile-more-works-btn {
-                display: none;
-                /* Shown via body.project-open */
-                width: 100%;
-                padding: 20px;
-                background: white;
-                border: none;
-                border-top: 1px solid #717171;
-                color: #0080ff;
-                font-family: "Inter", sans-serif;
-                font-size: 16px;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                cursor: pointer;
-                text-align: center;
-                order: 3;
-            }
+
 
             /* --- Image / Media Adjustments --- */
             .image-row {
@@ -505,7 +486,8 @@
 <body>
     <!-- Mobile-only sticky header -->
     <div class="mobile-header">
-        <a href="index.html" class="mobile-header-back"><span>←</span> BACK</a>
+        <a href="javascript:void(0)" class="mobile-header-back" id="mobile-back-btn"
+            onclick="handleMobileBack()"><span>←</span> BACK</a>
         <span class="mobile-header-title" id="mobile-project-title"></span>
     </div>
 
@@ -833,8 +815,6 @@
             </div>
         </div>
 
-        <!-- Mobile-only "More Works" button at the bottom -->
-        <button class="mobile-more-works-btn" onclick="showMenu()">MORE WORKS</button>
     </div>
 
     <script>
@@ -924,6 +904,16 @@
             // Scroll to top
             if (isMobile()) {
                 window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+        }
+
+        function handleMobileBack() {
+            if (document.body.classList.contains('project-open')) {
+                // If viewing a project, go back to menu
+                showMenu();
+            } else {
+                // If viewing menu, go to homepage
+                window.location.href = 'index.html';
             }
         }
     </script>
