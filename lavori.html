@@ -292,41 +292,144 @@
             display: block;
         }
 
-        @media (max-width: 768px) {
-            .flyer-grid {
-                grid-template-columns: 1fr;
-            }
+        /* ========================
+           MOBILE-ONLY ELEMENTS
+           Hidden on desktop
+           ======================== */
+        .mobile-header,
+        .mobile-more-works-btn {
+            display: none;
         }
 
+        /* ========================
+           MOBILE BREAKPOINT
+           ======================== */
         @media (max-width: 768px) {
-            .layout {
-                flex-direction: column-reverse;
+
+            /* Override body to allow normal page scroll */
+            body {
+                height: auto;
+                overflow: auto;
             }
 
+            .layout {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            /* --- Mobile Header Bar --- */
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 20px;
+                border-bottom: 1px solid #717171;
+                background: #fff;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .mobile-header-title {
+                color: #717171;
+                font-size: 14px;
+                font-weight: 400;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+            }
+
+            .mobile-header-back {
+                color: #0080ff;
+                font-size: 14px;
+                font-weight: 400;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            /* --- Sidebar / Menu --- */
             .sidebar {
                 width: 100%;
                 border-right: none;
-                border-top: 1px solid #717171;
                 border-bottom: none;
-                padding: 24px;
+                padding: 24px 20px;
                 height: auto;
-                background: #fff;
-                z-index: 10;
+                box-sizing: border-box;
+                order: 1;
             }
 
-            .content {
-                padding: 24px;
-                min-height: 50vh;
+            .sidebar .back-button {
+                display: none;
+                /* Hidden on mobile — we use mobile-header instead */
             }
 
             .section-links a {
-                padding: 8px 0;
+                padding: 6px 0;
+                display: block;
+                font-size: 16px;
+            }
+
+            /* --- Content Area --- */
+            .content {
+                padding: 20px;
+                overflow-y: visible;
+                order: 2;
                 display: block;
             }
 
+            /* State: project is active, hide sidebar, show content */
+            body.project-open .sidebar {
+                display: none;
+            }
+
+            body.project-open .mobile-more-works-btn {
+                display: block;
+            }
+
+            body.project-open .mobile-header-title {
+                display: block;
+            }
+
+            /* State: no project open, show sidebar, hide content area */
+            body:not(.project-open) .content {
+                display: none;
+            }
+
+            body:not(.project-open) .mobile-header-title {
+                display: none;
+            }
+
+            body:not(.project-open) .mobile-header-back {
+                /* Only show ← BACK, hide project title */
+            }
+
+            /* --- "More Works" Button --- */
+            .mobile-more-works-btn {
+                display: none;
+                /* Shown via body.project-open */
+                width: 100%;
+                padding: 20px;
+                background: white;
+                border: none;
+                border-top: 1px solid #717171;
+                color: #0080ff;
+                font-family: "Inter", sans-serif;
+                font-size: 16px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                text-align: center;
+                order: 3;
+            }
+
+            /* --- Image / Media Adjustments --- */
             .image-row {
                 flex-direction: column;
-                gap: 20px;
+                gap: 16px;
                 height: auto;
             }
 
@@ -341,59 +444,72 @@
                 position: relative;
                 height: auto;
                 width: 100%;
+                object-fit: contain;
             }
 
             .video-stack {
                 flex-direction: column;
-                width: 100%;
-                margin: 0;
+                width: calc(100% + 40px);
+                margin-left: -20px;
+                margin-right: -20px;
             }
 
             .video-stack video {
                 width: 100%;
             }
 
+            .project-details p+.video-stack {
+                margin-top: 0;
+            }
+
             .video-container-single {
                 max-width: 100%;
-            }
-
-            /* Sticky Back Button for better Mobile UX */
-            .back-button {
-                padding-top: 20px;
-                padding-bottom: 10px;
-            }
-
-            .mobile-menu-btn {
-                display: none;
-                /* Hidden by default, shown via JS when project active */
-                width: 100%;
-                padding: 20px;
-                background: white;
                 border: none;
-                border-top: 1px solid #717171;
-                color: #0080ff;
-                /* Match link color */
-                font-family: "Inter", sans-serif;
-                font-size: 16px;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                cursor: pointer;
-                text-align: center;
+                margin: 20px auto;
             }
-        }
 
-        /* Desktop: Always hide trigger button */
-        @media (min-width: 769px) {
-            .mobile-menu-btn {
-                display: none !important;
+            .youtube-container {
+                margin: 20px auto;
+            }
+
+            .youtube-container iframe {
+                border: none;
+            }
+
+            .youtube-row {
+                margin: 20px auto;
+            }
+
+            .youtube-row iframe {
+                border: none;
+            }
+
+            .pdf-container {
+                height: 60vh;
+                border: none;
+                margin: 16px auto;
+            }
+
+            .flyer-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            #corsedimoto p {
+                max-width: 100%;
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Mobile-only sticky header -->
+    <div class="mobile-header">
+        <a href="index.html" class="mobile-header-back"><span>←</span> BACK</a>
+        <span class="mobile-header-title" id="mobile-project-title"></span>
+    </div>
+
     <div class="layout">
-        <button id="mobile-menu-btn" class="mobile-menu-btn" onclick="toggleMobileMenu()">MORE WORKS</button>
         <div class="sidebar" id="sidebar">
             <div class="section">
                 <div class="section-title">Website</div>
@@ -433,7 +549,7 @@
         </div>
 
         <div class="content">
-            <div id="kaamos" class="project-details">
+            <div id="kaamos" class="project-details" data-title="Kaamos">
                 <p>Freelance project for a tattoo artist (KAAMOS).<br>
                     Software used: Figma, JavaScript, HTML, CSS, Claude AI.</p>
 
@@ -480,7 +596,7 @@
                 </div>
             </div>
 
-            <div id="vivilecanarie" class="project-details">
+            <div id="vivilecanarie" class="project-details" data-title="Vivilecanarie">
                 <p>Freelance project for a news company in the Canary Islands (ViviLeCanarie).<br>
                     Software used: Figma, Webflow, JavaScript.</p>
 
@@ -529,7 +645,7 @@
                 </div>
             </div>
 
-            <div id="corsedimoto" class="project-details">
+            <div id="corsedimoto" class="project-details" data-title="Corsedimoto.com">
                 <p>Project for a motorcycle news website (<a href="https://www.corsedimoto.com/" target="_blank"
                         class="highlight-blue"></a>Corsedimoto.com</a>).<br>
                     Software used: Premiere, After Effects, Illustrator, Photoshop.</p>
@@ -564,7 +680,7 @@
                 </div>
             </div>
 
-            <div id="university" class="project-details">
+            <div id="university" class="project-details" data-title="University">
                 <p>Projects for the university in different courses (Politecnico di Milano).<br>
                     Software used: After Effects, Premiere, Photoshop, Illustrator.</p>
 
@@ -588,7 +704,7 @@
                 </div>
             </div>
 
-            <div id="soupfm" class="project-details">
+            <div id="soupfm" class="project-details" data-title="Soup.fm">
                 <p>Soup.fm is a collective that I cofounded in 2024 with a friend.</p>
 
                 <p>The project was for us an occasion to experiment with different things, from curating music to
@@ -614,7 +730,7 @@
                 </div>
             </div>
 
-            <div id="vicentina" class="project-details">
+            <div id="vicentina" class="project-details" data-title="Vicentina Foundation">
                 <p>Project for a non-profit ecological awareness foundation (<a
                         href="https://www.instagram.com/vicentinafoundation/" target="_blank"
                         class="highlight-blue"></a>Vicentina Foundation</a>).</p>
@@ -642,7 +758,7 @@
                 </div>
             </div>
 
-            <div id="flyers" class="project-details">
+            <div id="flyers" class="project-details" data-title="Flyers">
                 <p>Graphic design for various events.<br>
                     Software used: Photoshop, Illustrator.</p>
 
@@ -673,7 +789,7 @@
                 </div>
             </div>
 
-            <div id="touchdesigner" class="project-details">
+            <div id="touchdesigner" class="project-details" data-title="TouchDesigner">
                 <p>Generative audio-responsive visuals (Personal project).<br>
                     Software used: TouchDesigner.</p>
 
@@ -716,9 +832,28 @@
                 </div>
             </div>
         </div>
+
+        <!-- Mobile-only "More Works" button at the bottom -->
+        <button class="mobile-more-works-btn" onclick="showMenu()">MORE WORKS</button>
     </div>
 
     <script>
+        // Project name mapping for mobile header
+        const projectNames = {
+            'kaamos': 'Kaamos',
+            'vivilecanarie': 'Vivilecanarie',
+            'corsedimoto': 'Corsedimoto.com',
+            'university': 'University',
+            'soupfm': 'Soup.fm',
+            'vicentina': 'Vicentina Foundation',
+            'flyers': 'Flyers',
+            'touchdesigner': 'TouchDesigner'
+        };
+
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
         function showProject(id) {
             // Hide all projects
             document.querySelectorAll('.project-details').forEach(el => {
@@ -759,27 +894,37 @@
                     obj.removeAttribute('data-data');
                 });
 
-                // Mobile UX: 
-                if (window.innerWidth <= 768) {
-                    // Scroll to top since content is now above menu
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Mobile UX
+                if (isMobile()) {
+                    // Add class to body to toggle visibility via CSS
+                    document.body.classList.add('project-open');
 
-                    // Hide sidebar, show "More Works" button
-                    document.getElementById('sidebar').style.display = 'none';
-                    document.getElementById('mobile-menu-btn').style.display = 'block';
+                    // Update mobile header title
+                    const title = project.getAttribute('data-title') || projectNames[id] || id;
+                    document.getElementById('mobile-project-title').textContent = title;
+
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: 'instant' });
                 }
             }
         }
 
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.getElementById('mobile-menu-btn');
+        function showMenu() {
+            // Remove body class — CSS handles hiding content & showing sidebar
+            document.body.classList.remove('project-open');
 
-            // Show sidebar
-            sidebar.style.display = 'flex';
+            // Clear active projects
+            document.querySelectorAll('.project-details').forEach(el => {
+                el.classList.remove('active');
+            });
 
-            // Hide button
-            btn.style.display = 'none';
+            // Clear header title
+            document.getElementById('mobile-project-title').textContent = '';
+
+            // Scroll to top
+            if (isMobile()) {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
         }
     </script>
 </body>
