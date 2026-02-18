@@ -466,9 +466,14 @@
             }
 
             .pdf-container {
-                height: 60vh;
+                width: calc(100% + 40px);
+                margin-left: -20px;
+                margin-right: -20px;
+                height: 50vh;
+                /* Reduced height to see more context, or use aspect-ratio if known */
                 border: none;
-                margin: 16px auto;
+                margin-top: 20px;
+                margin-bottom: 20px;
             }
 
             .flyer-grid {
