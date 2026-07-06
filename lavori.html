@@ -285,7 +285,7 @@
 
         .kaamos-particles-box {
             width: 100%;
-            height: 700px;
+            height: 350px;
             border: 2px solid #717171;
             box-sizing: border-box;
             margin-bottom: 20px;
@@ -1067,7 +1067,7 @@
             });
 
             const points = new THREE.Points(geo, mat);
-            const scale = isMobile ? 0.55 : 0.65;
+            const scale = isMobile ? 1.1 : 1.3;
             points.scale.setScalar(scale);
             scene.add(points);
 
