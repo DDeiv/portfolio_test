@@ -7,10 +7,11 @@ const Engine = Matter.Engine,
 const isChrome = navigator.userAgent.indexOf('Chrome') > -1;
 const isMobileView = () => window.innerWidth <= 768;
 
-// enableSleeping lets settled bodies rest without freezing them forever:
-// they wake up again when the window is resized.
+// Sleeping is desktop-only: it lets settled bodies rest cheaply and wake on
+// window resize. On phones it proved unreliable (words dozing off mid-air),
+// so there the freeze is handled manually in the render loop instead.
 const engine = Engine.create({
-    enableSleeping: true,
+    enableSleeping: window.innerWidth > 768,
     timing: {
         timeScale: 0.85,
         delta: 1000 / 60
@@ -161,49 +162,33 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         x0: bodyX,
         y0: bodyY,
         sleepPainted: false,
-        born: performance.now()
+        stillFrames: 0
     });
-    trimFallen();
-}
-
-// Cap the total number of words lying around so the simulation never
-// degrades, no matter how much someone plays with it.
-const MAX_FALLEN = 100;
-
-function trimFallen() {
-    while (fallingItems.length > MAX_FALLEN) {
-        const oldest = fallingItems.shift();
-        World.remove(engine.world, oldest.body);
-        fallenBodies.delete(oldest.body);
-        fallingWords.delete(oldest.el);
-        oldest.el.remove();
-    }
 }
 
 // ── Physics + render loop ──────────────────────────────────────────────────
-// Fixed-timestep loop instead of Matter.Runner: the Runner smooths timing by
-// taking the min of the last 60 frame deltas, so janky frames at page load or
-// tab switch put it in slow motion for ~2s. This loop always steps the engine
-// in constant increments and simply skips time the tab spent hidden.
-const FIXED_DELTA = 1000 / 60;
+// Steps the engine once per display frame with the real elapsed time, so the
+// simulation runs at the screen's refresh rate: 60fps on standard displays,
+// 120fps on ProMotion/high-refresh screens, always at correct speed.
+// Time the tab spent hidden is skipped instead of simulated (no slow motion,
+// unlike Matter's default Runner whose delta smoothing caused the 2s lag).
 let lastFrameTime = performance.now();
-let accumulator = 0;
+let lastDelta = 1000 / 60;
 
 function frame(now) {
     let elapsed = now - lastFrameTime;
     lastFrameTime = now;
 
-    // Tab was hidden or a huge hitch: don't try to catch up
-    if (elapsed > 100) elapsed = FIXED_DELTA;
-
-    accumulator += elapsed;
-    let steps = 0;
-    while (accumulator >= FIXED_DELTA && steps < 3) {
-        Engine.update(engine, FIXED_DELTA);
-        accumulator -= FIXED_DELTA;
-        steps++;
+    if (elapsed <= 0 || elapsed > 100) {
+        // Tab was hidden or timer glitch: keep the previous pace
+        elapsed = lastDelta;
+    } else if (elapsed > 34) {
+        // Cap big hitches at ~2 standard frames
+        elapsed = 34;
     }
-    if (steps === 3) accumulator = 0;
+
+    Engine.update(engine, elapsed, elapsed / lastDelta);
+    lastDelta = elapsed;
 
     // Render: every dropped word follows its body.
     const mobile = isMobileView();
@@ -218,11 +203,18 @@ function frame(now) {
         } else {
             it.sleepPainted = false;
 
-            // On mobile, freeze settled words solid (like the original version):
-            // static bodies cost nothing and the pile can't jiggle itself awake.
-            if (mobile && body.speed < 0.05 && body.angularSpeed < 0.05 &&
-                now - it.born > 500) {
-                Body.setStatic(body, true);
+            // On mobile, freeze a word solid only after it has been still for
+            // ~20 consecutive frames: a word at the apex of an arc is slow for
+            // just an instant, so it keeps flying instead of freezing mid-air.
+            if (mobile) {
+                if (body.speed < 0.05 && body.angularSpeed < 0.05) {
+                    it.stillFrames++;
+                    if (it.stillFrames > 20) {
+                        Body.setStatic(body, true);
+                    }
+                } else {
+                    it.stillFrames = 0;
+                }
             }
         }
 
@@ -355,6 +347,9 @@ segments.forEach((segment) => {
                     }
                 };
 
+                // Used by the mouse-sweep path sampling below
+                span._drop = handleWordFall;
+
                 let mouseEnterTimer;
                 span.addEventListener('mouseenter', () => {
                     mouseEnterTimer = setTimeout(() => handleWordFall(), 10);
@@ -443,6 +438,48 @@ function resetFallenWords() {
     fallingWords.clear();
     fallingItems.length = 0;
 }
+
+// ── Mouse sweep (desktop) ───────────────────────────────────────────────────
+// The browser samples the pointer, so a fast cursor sweep "jumps" over words
+// between two mousemove events and their mouseenter never fires. This samples
+// the path between events and drops every word it crossed, throwing it in the
+// direction of the sweep.
+function setupMouseSweep() {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
+    let lastX = null, lastY = null, lastT = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        const x = e.clientX, y = e.clientY, t = e.timeStamp;
+
+        if (lastX !== null) {
+            const dx = x - lastX;
+            const dy = y - lastY;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 8) {
+                const dt = Math.max(t - lastT, 1);
+                const speed = dist / dt; // px per ms
+                const vx = (dx / dist) * Math.min(speed * 2, 5);
+                const vy = (dy / dist) * Math.min(speed * 2, 5);
+
+                const step = 12;
+                for (let d = 0; d <= dist; d += step) {
+                    const el = document.elementFromPoint(
+                        lastX + dx * (d / dist),
+                        lastY + dy * (d / dist)
+                    );
+                    if (el && el._drop) el._drop(vx, vy);
+                }
+            }
+        }
+
+        lastX = x;
+        lastY = y;
+        lastT = t;
+    });
+}
+setupMouseSweep();
 
 // Initialize swipe handling
 setupSwipeHandling();
