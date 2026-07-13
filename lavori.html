@@ -9,13 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="public/images/dancer_culo.png">
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
-        }
-    }
-    </script>
     <style>
         body {
             margin: 0;
@@ -206,6 +199,57 @@
             box-sizing: border-box;
         }
 
+        .preview-toggle {
+            max-width: 844px;
+            margin: 0 auto 10px auto;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .preview-toggle button {
+            font-family: "Inter", sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            background: #fff;
+            border: 1px solid #717171;
+            color: #717171;
+            cursor: pointer;
+        }
+
+        .preview-toggle button:hover {
+            color: #0080ff;
+        }
+
+        .preview-toggle button.active {
+            border-color: #0080ff;
+            color: #0080ff;
+        }
+
+        .live-preview {
+            max-width: 844px;
+            margin: 0 auto 20px auto;
+            width: 100%;
+            border: 2px solid #717171;
+            box-sizing: border-box;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .live-preview iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            display: block;
+            transform-origin: top left;
+        }
+
         .source-text {
             font-size: 14px;
             color: #717171;
@@ -281,26 +325,6 @@
         .image-box.landscape {
             aspect-ratio: 1024 / 581;
             flex-grow: 1;
-        }
-
-        .kaamos-particles-box {
-            width: 100%;
-            height: 350px;
-            border: 2px solid #717171;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-            overflow: hidden;
-            position: relative;
-            background: #fff;
-        }
-
-        .kaamos-particles {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            pointer-events: none;
         }
 
         .flyer-grid {
@@ -496,6 +520,10 @@
                 border: none;
             }
 
+            .live-preview {
+                border: 1px solid #717171;
+            }
+
             .pdf-container {
                 display: none;
             }
@@ -536,10 +564,13 @@
     <div class="layout">
         <div class="sidebar" id="sidebar">
             <div class="section">
-                <div class="section-title">Website</div>
+                <div class="section-title">Web Projects</div>
                 <div class="section-links">
                     <a onclick="showProject('kaamos')">Kaamos</a>
                     <a onclick="showProject('vivilecanarie')">Vivilecanarie</a>
+                    <a onclick="showProject('lilli')">Lilli Portfolio</a>
+                    <a onclick="showProject('recoil')">Recoil</a>
+                    <a onclick="showProject('botanical')">Botanical Editorial</a>
                 </div>
             </div>
 
@@ -581,48 +612,17 @@
                     fix, responsive design, and CMS.</p>
 
                 <p>To open, click <a href="https://ddeiv.github.io/kaamos/" target="_blank"
-                        class="highlight-blue">here</a>.</p>
+                        class="highlight-blue">here</a>. You can also try it below.</p>
 
-                <!-- Images placeholder -->
-                <div id="kaamos-images">
-                    <div class="image-row">
-                        <div class="image-box portrait">
-                            <img data-src="public/images/kaamos_portrait.jpg" alt="Kaamos Mobile">
-                        </div>
-                        <div class="image-box landscape">
-                            <img data-src="public/images/kaamos_landscape.jpg" alt="Kaamos Desktop">
-                        </div>
-                    </div>
-
-                    <div class="kaamos-particles-box">
-                        <canvas id="kaamos-particles" class="kaamos-particles"></canvas>
-                    </div>
-
-                    <div class="image-row">
-                        <div class="image-box portrait">
-                            <img data-src="public/images/kaamos_about.jpg" alt="Kaamos About Info">
-                        </div>
-                        <div class="image-box landscape">
-                            <img data-src="public/images/kaamos_about_final.jpg" alt="Kaamos About Text">
-                        </div>
-                    </div>
-                    <div class="image-row">
-                        <div class="image-box portrait">
-                            <img data-src="public/images/kaamos_previous.jpg" alt="Kaamos Previous">
-                        </div>
-                        <div class="image-box landscape">
-                            <img data-src="public/images/kaamos_previous_landscape.jpg" alt="Kaamos Previous Landscape">
-                        </div>
-                    </div>
-                    <div class="image-row">
-                        <div class="image-box portrait">
-                            <img data-src="public/images/kaamos_vision.jpg" alt="Kaamos Vision">
-                        </div>
-                        <div class="image-box landscape">
-                            <img data-src="public/images/kaamos_vision_landscape.jpg" alt="Kaamos Vision Landscape">
-                        </div>
-                    </div>
+                <div class="preview-toggle">
+                    <button class="active" onclick="setPreviewMode(this, 'desktop')">Desktop</button>
+                    <button onclick="setPreviewMode(this, 'mobile')">Mobile</button>
                 </div>
+                <div class="live-preview">
+                    <iframe data-src="https://ddeiv.github.io/kaamos/" title="Kaamos live preview"
+                        loading="lazy"></iframe>
+                </div>
+
             </div>
 
             <div id="vivilecanarie" class="project-details" data-title="Vivilecanarie">
@@ -674,9 +674,87 @@
                 </div>
             </div>
 
+            <div id="lilli" class="project-details" data-title="Lilli Portfolio">
+                <p>Portfolio template for a 3D artist (Lilli Portfolio).<br>
+                    Software used: Next.js, Three.js, JavaScript, Claude AI.</p>
+
+                <p>Featuring: interactive 3D environment, real-time model viewer, responsive design, deployed on
+                    Vercel.</p>
+
+                <p>The template is structured so that the artist can plug in their own 3D models; the ones currently
+                    visible are placeholders. The site is built as an immersive, navigable space rather than a
+                    traditional page-based portfolio.</p>
+
+                <p>To open, click <a href="https://lillipages.vercel.app" target="_blank"
+                        class="highlight-blue">here</a>. You can also try it below.</p>
+
+                <div class="preview-toggle">
+                    <button class="active" onclick="setPreviewMode(this, 'desktop')">Desktop</button>
+                    <button onclick="setPreviewMode(this, 'mobile')">Mobile</button>
+                </div>
+                <div class="live-preview">
+                    <iframe data-src="https://lillipages.vercel.app" title="Lilli Portfolio live preview"
+                        loading="lazy"></iframe>
+                </div>
+
+            </div>
+
+            <div id="recoil" class="project-details" data-title="Recoil">
+                <p>Personal project: a minimalist browser arcade game (RECOIL).<br>
+                    Software used: JavaScript, HTML, CSS, Claude AI.</p>
+
+                <p>Featuring: physics-based movement, mouse/keyboard and touch controls, score system, invertible color
+                    scheme, full-screen responsive canvas.</p>
+
+                <p>The core mechanic is built around a single constraint: the ship has no thrusters, and the only way
+                    to move is the recoil of your own shots. Aiming, moving, and shooting become the same gesture,
+                    which makes survival a constant trade-off between dodging and firing. It runs entirely in the
+                    browser, on desktop and mobile.</p>
+
+                <p>To open, click <a href="https://ddeiv.github.io/asteroid-game-web/" target="_blank"
+                        class="highlight-blue">here</a>. You can also play it below.</p>
+
+                <div class="preview-toggle">
+                    <button class="active" onclick="setPreviewMode(this, 'desktop')">Desktop</button>
+                    <button onclick="setPreviewMode(this, 'mobile')">Mobile</button>
+                </div>
+                <div class="live-preview">
+                    <iframe data-src="https://ddeiv.github.io/asteroid-game-web/" title="RECOIL live preview"
+                        loading="lazy"></iframe>
+                </div>
+
+            </div>
+
+            <div id="botanical" class="project-details" data-title="Botanical Editorial">
+                <p>Personal project: an editorial-style care manual for my houseplants (The Botanical
+                    Editorial).<br>
+                    Software used: JavaScript, HTML, CSS, Claude AI.</p>
+
+                <p>Featuring: master reference table, individual care monographs, recovery protocols, weekly and
+                    monthly routine checklists with saved progress, PDF export, responsive design.</p>
+
+                <p>Built to keep all of my plants alive in one place: each of the 12 species has its own monograph
+                    with light and watering protocols (and a "drama level" rating), while recovery sections cover
+                    what to do when something goes wrong. The routine schedule tracks weekly and monthly tasks and
+                    remembers progress between visits.</p>
+
+                <p>To open, click <a href="https://ddeiv.github.io/botanical-editorial/" target="_blank"
+                        class="highlight-blue">here</a>. You can also browse it below.</p>
+
+                <div class="preview-toggle">
+                    <button class="active" onclick="setPreviewMode(this, 'desktop')">Desktop</button>
+                    <button onclick="setPreviewMode(this, 'mobile')">Mobile</button>
+                </div>
+                <div class="live-preview">
+                    <iframe data-src="https://ddeiv.github.io/botanical-editorial/"
+                        title="Botanical Editorial live preview" loading="lazy"></iframe>
+                </div>
+
+            </div>
+
             <div id="corsedimoto" class="project-details" data-title="Corsedimoto.com">
                 <p>Project for a motorcycle news website (<a href="https://www.corsedimoto.com/" target="_blank"
-                        class="highlight-blue"></a>Corsedimoto.com</a>).<br>
+                        class="highlight-blue">Corsedimoto.com</a>).<br>
                     Software used: Premiere, After Effects, Illustrator, Photoshop.</p>
 
                 <p>Featuring: video editing, motion graphics, thumbnail design, social media posts.</p>
@@ -795,7 +873,7 @@
             <div id="vicentina" class="project-details" data-title="Vicentina Foundation">
                 <p>Project for a non-profit ecological awareness foundation (<a
                         href="https://www.instagram.com/vicentinafoundation/" target="_blank"
-                        class="highlight-blue"></a>Vicentina Foundation</a>).</p>
+                        class="highlight-blue">Vicentina Foundation</a>).</p>
 
                 <p>In collaboration with <a href="https://www.instagram.com/fluidolisboa/" target="_blank"
                         class="highlight-blue">Fluido Lisboa</a>, we curated the launch event for the Vicentina
@@ -897,233 +975,14 @@
 
     </div>
 
-    <script type="module">
-        import * as THREE from 'three';
-
-        // ── Particle sampler ──────────────────────────────────────────────────────
-        function sampleParticlesFromImage(imageUrl, particleCount) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.src = imageUrl;
-                img.onload = () => {
-                    const W = 800;
-                    const H = Math.round(W * (img.height / img.width));
-                    const canvas = document.createElement('canvas');
-                    canvas.width = W; canvas.height = H;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, W, H);
-                    const data = ctx.getImageData(0, 0, W, H).data;
-                    const valid = [];
-                    for (let i = 0; i < data.length; i += 4) {
-                        const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
-                        const weight = (1 - brightness / 255) * (data[i+3] / 255);
-                        if (weight > 0.05) {
-                            const px = (i/4) % W;
-                            const py = Math.floor((i/4) / W);
-                            valid.push({ x: px, y: py, weight });
-                        }
-                    }
-                    const pos = new Float32Array(particleCount * 3);
-                    let count = 0, attempts = 0;
-                    const jitter = 1.5 / W;
-                    while (count < particleCount && attempts < particleCount * 100) {
-                        attempts++;
-                        const p = valid[Math.floor(Math.random() * valid.length)];
-                        if (Math.random() < p.weight) {
-                            const nx = (p.x / W) * 2 - 1;
-                            const ny = -((p.y / H) * 2 - 1);
-                            pos[count*3]   = (nx + (Math.random()-.5)*jitter) * 2.5;
-                            pos[count*3+1] = (ny + (Math.random()-.5)*jitter) * 2.5;
-                            pos[count*3+2] = (Math.random()-.5) * 0.05 * 2.5;
-                            count++;
-                        }
-                    }
-                    resolve(pos);
-                };
-                img.onerror = reject;
-            });
-        }
-
-        // ── Shaders (black-only: no morph color flash, just dark particles) ───────
-        const vertexShader = `
-            precision highp float;
-            uniform float uTime;
-            uniform float uMorphFactor;
-            attribute vec3 targetPosition;
-            varying float vDisplacement;
-            varying float vSpeed;
-
-            vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
-            vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
-            vec4 permute(vec4 x){return mod289(((x*34.)+1.)*x);}
-            vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
-            float snoise(vec3 v){
-                const vec2 C=vec2(1./6.,1./3.);const vec4 D=vec4(0.,.5,1.,2.);
-                vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
-                vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.-g;
-                vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
-                vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;
-                i=mod289(i);
-                vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
-                float n_=0.142857142857;vec3 ns=n_*D.wyz-D.xzx;
-                vec4 j=p-49.*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.*x_);
-                vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.-abs(x)-abs(y);
-                vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);
-                vec4 s0=floor(b0)*2.+1.;vec4 s1=floor(b1)*2.+1.;vec4 sh=-step(h,vec4(0.));
-                vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-                vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
-                vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-                p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
-                vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);m=m*m;
-                return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-            }
-
-            void main(){
-                vec3 mixedPos=mix(position,targetPosition,uMorphFactor);
-                vSpeed=length(targetPosition-position);
-                float noise=snoise(mixedPos*2.+uTime*.15);
-                vDisplacement=noise;
-                gl_Position=projectionMatrix*modelViewMatrix*vec4(mixedPos,1.);
-                gl_PointSize=1.3;
-            }
-        `;
-
-        const fragmentShader = `
-            precision highp float;
-            uniform float uMorphFactor;
-            varying float vDisplacement;
-            varying float vSpeed;
-
-            void main(){
-                vec2 c=gl_PointCoord-.5;
-                float alpha=1.-smoothstep(.35,.45,length(c));
-                if(alpha<.01)discard;
-                gl_FragColor=vec4(0.,0.,0.,alpha*0.6);
-            }
-        `;
-
-        // ── Particle system state ─────────────────────────────────────────────────
-        let particleRenderer = null;
-        let particleAnimId = null;
-
-        function destroyParticles() {
-            if (particleAnimId) { cancelAnimationFrame(particleAnimId); particleAnimId = null; }
-            if (particleRenderer) { particleRenderer.dispose(); particleRenderer = null; }
-        }
-
-        async function initParticles() {
-            destroyParticles();
-
-            const canvas = document.getElementById('kaamos-particles');
-            if (!canvas) return;
-
-            const isMobile = window.innerWidth < 768;
-            const PARTICLE_COUNT = isMobile ? 60000 : 100000;
-            const BASE = 'public/images/';
-            const shapeUrls = [BASE+'shape1.png', BASE+'shape2.png', BASE+'shape3.png', BASE+'shape4.png', BASE+'shape5.png'];
-
-            // Renderer
-            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.setClearColor(0xffffff, 1);
-            particleRenderer = renderer;
-
-            const W = canvas.clientWidth;
-            const H = canvas.clientHeight;
-            renderer.setSize(W, H, false);
-
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xffffff);
-
-            const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
-            camera.position.set(0, 0.45, 5);
-
-            // Geometry
-            const geo = new THREE.BufferGeometry();
-            const initPos = new Float32Array(PARTICLE_COUNT * 3);
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const u = Math.random(), v = Math.random();
-                const theta = 2 * Math.PI * u;
-                const phi = Math.acos(2 * v - 1);
-                const r = 2;
-                initPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-                initPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-                initPos[i*3+2] = r * Math.cos(phi);
-            }
-            geo.setAttribute('position', new THREE.BufferAttribute(initPos.slice(), 3));
-            geo.setAttribute('targetPosition', new THREE.BufferAttribute(initPos.slice(), 3));
-
-            const mat = new THREE.ShaderMaterial({
-                uniforms: {
-                    uTime: { value: 0 },
-                    uMorphFactor: { value: 0 }
-                },
-                vertexShader,
-                fragmentShader,
-                transparent: true,
-                depthWrite: false,
-                blending: THREE.NormalBlending
-            });
-
-            const points = new THREE.Points(geo, mat);
-            const scale = isMobile ? 0.55 : 0.65;
-            points.scale.setScalar(scale);
-            scene.add(points);
-
-            // Load shapes then start animating
-            let shapes = [];
-            let currentIdx = 0, nextIdx = 1, morphProgress = 0;
-            const clock = new THREE.Clock();
-
-            try {
-                shapes = await Promise.all(shapeUrls.map(url => sampleParticlesFromImage(url, PARTICLE_COUNT)));
-                if (particleRenderer !== renderer) return; // destroyed while loading
-                geo.attributes.position.array.set(shapes[0]);
-                geo.attributes.position.needsUpdate = true;
-                geo.attributes.targetPosition.array.set(shapes[1]);
-                geo.attributes.targetPosition.needsUpdate = true;
-            } catch(e) {
-                console.warn('Kaamos particles: failed to load shapes', e);
-                return;
-            }
-
-            function animate() {
-                particleAnimId = requestAnimationFrame(animate);
-                const delta = clock.getDelta();
-                mat.uniforms.uTime.value = clock.elapsedTime;
-
-                if (shapes.length > 0) {
-                    const speed = 0.12 + Math.sin(clock.elapsedTime * 0.2) * 0.02;
-                    morphProgress += delta * speed;
-                    if (morphProgress >= 1) {
-                        morphProgress = 0;
-                        const next = (nextIdx + 1) % shapes.length;
-                        geo.attributes.position.array.set(shapes[nextIdx]);
-                        geo.attributes.position.needsUpdate = true;
-                        geo.attributes.targetPosition.array.set(shapes[next]);
-                        geo.attributes.targetPosition.needsUpdate = true;
-                        currentIdx = nextIdx;
-                        nextIdx = next;
-                    }
-                    const t = morphProgress;
-                    mat.uniforms.uMorphFactor.value = t * t * (3 - 2 * t);
-                }
-
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        // Expose to global scope so showProject can call it
-        window._kaamosParticles = { init: initParticles, destroy: destroyParticles };
-    </script>
-
     <script>
         // Project name mapping for mobile header
         const projectNames = {
             'kaamos': 'Kaamos',
             'vivilecanarie': 'Vivilecanarie',
+            'lilli': 'Lilli Portfolio',
+            'recoil': 'Recoil',
+            'botanical': 'Botanical Editorial',
             'corsedimoto': 'Corsedimoto.com',
             'university': 'University',
             'soupfm': 'Soup.fm',
@@ -1135,6 +994,46 @@
         function isMobile() {
             return window.innerWidth <= 768;
         }
+
+        // ── Live preview: desktop/mobile viewport simulation ──────────────
+        // The iframe is rendered at a fixed "virtual" viewport size, then
+        // scaled down with a CSS transform to fit its container. This is how
+        // a desktop layout can be shown even on a phone screen.
+        const PREVIEW_SIZES = {
+            desktop: { w: 1280, h: 800 },
+            mobile: { w: 390, h: 740 }
+        };
+
+        function layoutPreview(preview) {
+            const iframe = preview.querySelector('iframe');
+            if (!iframe) return;
+            const mode = preview.dataset.mode || 'desktop';
+            const size = PREVIEW_SIZES[mode];
+            const cw = preview.clientWidth;
+            if (!cw) return;
+            const scale = Math.min(1, cw / size.w);
+            iframe.style.width = size.w + 'px';
+            iframe.style.height = size.h + 'px';
+            iframe.style.transform = 'scale(' + scale + ')';
+            // Center horizontally when the scaled iframe is narrower than the box
+            iframe.style.left = Math.max(0, (cw - size.w * scale) / 2) + 'px';
+            preview.style.height = (size.h * scale) + 'px';
+        }
+
+        function setPreviewMode(btn, mode) {
+            const toggle = btn.parentElement;
+            toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const preview = toggle.nextElementSibling;
+            if (preview && preview.classList.contains('live-preview')) {
+                preview.dataset.mode = mode;
+                layoutPreview(preview);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.project-details.active .live-preview').forEach(layoutPreview);
+        });
 
         function showProject(id) {
             // Hide all projects
@@ -1186,12 +1085,8 @@
                     document.getElementById('mobile-project-title').textContent = title;
                 }
 
-                // Start or stop kaamos particles
-                if (id === 'kaamos') {
-                    if (window._kaamosParticles) window._kaamosParticles.init();
-                } else {
-                    if (window._kaamosParticles) window._kaamosParticles.destroy();
-                }
+                // Size live previews now that the project is visible
+                project.querySelectorAll('.live-preview').forEach(layoutPreview);
 
                 // Always reset scroll position when opening a new project
                 window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1203,7 +1098,6 @@
         function showMenu() {
             // Remove body class — CSS handles hiding content & showing sidebar
             document.body.classList.remove('project-open');
-            if (window._kaamosParticles) window._kaamosParticles.destroy();
 
             // Clear active projects
             document.querySelectorAll('.project-details').forEach(el => {
