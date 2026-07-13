@@ -73,26 +73,6 @@ body {
     transition: opacity 0.1s ease-out;
 }
 
-/* Motion permission button (shown by JS on mobile only) */
-#motionBtn {
-    display: none;
-    position: fixed;
-    right: 16px;
-    bottom: 16px;
-    z-index: 2000;
-    font-family: "Inter", sans-serif;
-    font-size: 13px;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 8px 14px;
-    background: #fff;
-    border: 1px solid #717171;
-    color: #0080ff;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-
 /* Mobile styles */
 @media (max-width: 768px) {
     .text-container {

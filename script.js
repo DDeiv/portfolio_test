@@ -8,7 +8,7 @@ const isChrome = navigator.userAgent.indexOf('Chrome') > -1;
 const isMobileView = () => window.innerWidth <= 768;
 
 // enableSleeping lets settled bodies rest without freezing them forever:
-// they wake up again when gravity changes (resize, gyroscope, shake).
+// they wake up again when the window is resized.
 const engine = Engine.create({
     enableSleeping: true,
     timing: {
@@ -16,43 +16,45 @@ const engine = Engine.create({
         delta: 1000 / 60
     }
 });
-let motionActive = false;
-let baseGravity = 1;
-
 const setGravity = () => {
-    baseGravity = isChrome ?
+    engine.world.gravity.x = 0;
+    engine.world.gravity.y = isChrome ?
         (isMobileView() ? 1.0 : 0.6) :
         (isMobileView() ? 2.0 : 1.3);
-    if (!motionActive) {
-        engine.world.gravity.x = 0;
-        engine.world.gravity.y = baseGravity;
-    }
 };
 setGravity();
 
-// ── Boundaries: ground + side walls + ceiling ──────────────────────────────
-// Walls keep the fallen words inside the viewport, so they can react to
-// window resizing and to gyroscope gravity without flying off-screen.
+// ── Boundaries ──────────────────────────────────────────────────────────────
+// Desktop: ground + walls + ceiling, so words stay in the viewport and react
+// to window resizing. Mobile: ground only, like the original version.
 let bounds = [];
 
 const createBounds = () => {
     const t = 60;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    return [
-        // ground (same position as before: top edge at h - 40)
+
+    // ground (same position as before: top edge at h - 40)
+    const list = [
         Bodies.rectangle(w / 2, h - 10, w, t, {
             isStatic: true,
             friction: 0.85,
             restitution: 0.15
-        }),
-        // left wall
-        Bodies.rectangle(-t / 2, h / 2, t, h * 4, { isStatic: true }),
-        // right wall
-        Bodies.rectangle(w + t / 2, h / 2, t, h * 4, { isStatic: true }),
-        // ceiling
-        Bodies.rectangle(w / 2, -t / 2, w * 4, t, { isStatic: true })
+        })
     ];
+
+    // Walls and ceiling on desktop only, where they make resize reactions
+    // work. On mobile they made the pile stack up and jiggle forever,
+    // which killed performance — original ground-only setup restored.
+    if (!isMobileView()) {
+        list.push(
+            Bodies.rectangle(-t / 2, h / 2, t, h * 4, { isStatic: true }),
+            Bodies.rectangle(w + t / 2, h / 2, t, h * 4, { isStatic: true }),
+            Bodies.rectangle(w / 2, -t / 2, w * 4, t, { isStatic: true })
+        );
+    }
+
+    return list;
 };
 
 bounds = createBounds();
@@ -153,7 +155,14 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
     document.body.appendChild(wordElement);
     fallingWords.add(wordElement);
 
-    fallingItems.push({ body, el: wordElement, x0: bodyX, y0: bodyY, sleepPainted: false });
+    fallingItems.push({
+        body,
+        el: wordElement,
+        x0: bodyX,
+        y0: bodyY,
+        sleepPainted: false,
+        born: performance.now()
+    });
     trimFallen();
 }
 
@@ -197,30 +206,35 @@ function frame(now) {
     if (steps === 3) accumulator = 0;
 
     // Render: every dropped word follows its body.
+    const mobile = isMobileView();
     for (let i = 0; i < fallingItems.length; i++) {
         const it = fallingItems[i];
+        const body = it.body;
 
-        // Sleeping words don't move: paint them once, then skip until they wake
-        if (it.body.isSleeping) {
+        // Settled words don't move: paint them once, then skip until they wake
+        if (body.isSleeping || body.isStatic) {
             if (it.sleepPainted) continue;
             it.sleepPainted = true;
         } else {
             it.sleepPainted = false;
+
+            // On mobile, freeze settled words solid (like the original version):
+            // static bodies cost nothing and the pile can't jiggle itself awake.
+            if (mobile && body.speed < 0.05 && body.angularSpeed < 0.05 &&
+                now - it.born > 500) {
+                Body.setStatic(body, true);
+            }
         }
 
-        const dx = it.body.position.x - it.x0;
-        const dy = it.body.position.y - it.y0;
-        const rotation = it.body.angle * (180 / Math.PI);
+        const dx = body.position.x - it.x0;
+        const dy = body.position.y - it.y0;
+        const rotation = body.angle * (180 / Math.PI);
         it.el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${rotation}deg)`;
     }
 
     requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-
-function wakeAll() {
-    fallenBodies.forEach(body => Sleeping.set(body, false));
-}
 
 function checkWordInSwipePath(wordElement, currentX, currentY) {
     if (wordElement.classList.contains('original-hidden')) {
@@ -408,6 +422,9 @@ function handleResize() {
         if (x !== body.position.x || y !== body.position.y) {
             Body.setPosition(body, { x, y });
         }
+        if (body.isStatic) {
+            Body.setStatic(body, false);
+        }
         Sleeping.set(body, false);
     });
 }
@@ -425,103 +442,6 @@ function resetFallenWords() {
     fallenBodies.clear();
     fallingWords.clear();
     fallingItems.length = 0;
-}
-
-// ── Gyroscope gravity + shake-to-drop (mobile) ─────────────────────────────
-const motionBtn = document.getElementById('motionBtn');
-let lastShakeTime = 0;
-
-function handleOrientation(e) {
-    if (e.gamma === null || e.beta === null) return;
-
-    // gamma: left/right tilt, beta: front/back tilt
-    const gx = Math.max(-1, Math.min(1, e.gamma / 45));
-    const gy = Math.max(-1, Math.min(1, e.beta / 45));
-
-    const prevX = engine.world.gravity.x;
-    const prevY = engine.world.gravity.y;
-
-    engine.world.gravity.x = gx * baseGravity;
-    engine.world.gravity.y = gy * baseGravity;
-
-    // Wake settled words when the direction of gravity actually changes
-    if (Math.abs(engine.world.gravity.x - prevX) > 0.05 ||
-        Math.abs(engine.world.gravity.y - prevY) > 0.05) {
-        wakeAll();
-    }
-}
-
-function shakeEverything() {
-    // Drop every word still standing in the paragraph
-    wordsMap.forEach((span) => {
-        if (!span.classList.contains('original-hidden')) {
-            const rect = span.getBoundingClientRect();
-            createFallingWord(
-                span.textContent,
-                rect,
-                (Math.random() - 0.5) * 12,
-                -(4 + Math.random() * 6)
-            );
-            span.classList.add('original-hidden');
-            setTimeout(() => {
-                span.classList.remove('original-hidden');
-            }, 5000);
-        }
-    });
-
-    // Toss the words already lying around
-    fallenBodies.forEach(body => {
-        Sleeping.set(body, false);
-        Body.setVelocity(body, {
-            x: (Math.random() - 0.5) * 14,
-            y: -(6 + Math.random() * 8)
-        });
-    });
-}
-
-function handleMotion(e) {
-    const a = e.acceleration;
-    if (!a) return;
-
-    const magnitude = Math.sqrt(
-        (a.x || 0) * (a.x || 0) +
-        (a.y || 0) * (a.y || 0) +
-        (a.z || 0) * (a.z || 0)
-    );
-
-    if (magnitude > 18 && Date.now() - lastShakeTime > 1200) {
-        lastShakeTime = Date.now();
-        shakeEverything();
-    }
-}
-
-async function enableMotion() {
-    try {
-        // iOS 13+ requires an explicit permission request from a user gesture
-        if (typeof DeviceOrientationEvent !== 'undefined' &&
-            typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const response = await DeviceOrientationEvent.requestPermission();
-            if (response !== 'granted') return;
-        }
-        if (typeof DeviceMotionEvent !== 'undefined' &&
-            typeof DeviceMotionEvent.requestPermission === 'function') {
-            try { await DeviceMotionEvent.requestPermission(); } catch (err) { /* optional */ }
-        }
-
-        window.addEventListener('deviceorientation', handleOrientation);
-        window.addEventListener('devicemotion', handleMotion);
-        motionActive = true;
-
-        if (motionBtn) motionBtn.style.display = 'none';
-    } catch (err) {
-        if (motionBtn) motionBtn.style.display = 'none';
-    }
-}
-
-if (motionBtn && isMobileView() && 'ontouchstart' in window &&
-    typeof DeviceOrientationEvent !== 'undefined') {
-    motionBtn.style.display = 'block';
-    motionBtn.addEventListener('click', enableMotion);
 }
 
 // Initialize swipe handling
