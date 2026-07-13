@@ -1,5 +1,4 @@
 const Engine = Matter.Engine,
-    Runner = Matter.Runner,
     Bodies = Matter.Bodies,
     World = Matter.World,
     Body = Matter.Body,
@@ -17,8 +16,6 @@ const engine = Engine.create({
         delta: 1000 / 60
     }
 });
-const runner = Runner.create();
-
 let motionActive = false;
 let baseGravity = 1;
 
@@ -32,8 +29,6 @@ const setGravity = () => {
     }
 };
 setGravity();
-
-Runner.run(runner, engine);
 
 // ── Boundaries: ground + side walls + ceiling ──────────────────────────────
 // Walls keep the fallen words inside the viewport, so they can react to
@@ -176,10 +171,32 @@ function trimFallen() {
     }
 }
 
-// ── Single render loop for every dropped word ──────────────────────────────
-// (Previously each word had its own loop that stopped once the word settled,
-// so settled words could never move again. Now they always follow their body.)
-function renderLoop() {
+// ── Physics + render loop ──────────────────────────────────────────────────
+// Fixed-timestep loop instead of Matter.Runner: the Runner smooths timing by
+// taking the min of the last 60 frame deltas, so janky frames at page load or
+// tab switch put it in slow motion for ~2s. This loop always steps the engine
+// in constant increments and simply skips time the tab spent hidden.
+const FIXED_DELTA = 1000 / 60;
+let lastFrameTime = performance.now();
+let accumulator = 0;
+
+function frame(now) {
+    let elapsed = now - lastFrameTime;
+    lastFrameTime = now;
+
+    // Tab was hidden or a huge hitch: don't try to catch up
+    if (elapsed > 100) elapsed = FIXED_DELTA;
+
+    accumulator += elapsed;
+    let steps = 0;
+    while (accumulator >= FIXED_DELTA && steps < 3) {
+        Engine.update(engine, FIXED_DELTA);
+        accumulator -= FIXED_DELTA;
+        steps++;
+    }
+    if (steps === 3) accumulator = 0;
+
+    // Render: every dropped word follows its body.
     for (let i = 0; i < fallingItems.length; i++) {
         const it = fallingItems[i];
 
@@ -196,9 +213,10 @@ function renderLoop() {
         const rotation = it.body.angle * (180 / Math.PI);
         it.el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${rotation}deg)`;
     }
-    requestAnimationFrame(renderLoop);
+
+    requestAnimationFrame(frame);
 }
-requestAnimationFrame(renderLoop);
+requestAnimationFrame(frame);
 
 function wakeAll() {
     fallenBodies.forEach(body => Sleeping.set(body, false));
