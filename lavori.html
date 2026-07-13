@@ -4,7 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lavori - Davide Bocchi</title>
+    <title>Works — Davide Bocchi</title>
+    <meta name="description"
+        content="Selected works by Davide Bocchi: websites, browser games, video editing, motion graphics, events, and generative visuals.">
+    <meta property="og:title" content="Works — Davide Bocchi">
+    <meta property="og:description"
+        content="Selected works: websites, browser games, video editing, motion graphics, events, and generative visuals.">
+    <meta property="og:url" content="https://davidebocchi.com/lavori.html">
+    <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -566,35 +573,35 @@
             <div class="section">
                 <div class="section-title">Web Projects</div>
                 <div class="section-links">
-                    <a onclick="showProject('kaamos')">Kaamos</a>
-                    <a onclick="showProject('vivilecanarie')">Vivilecanarie</a>
-                    <a onclick="showProject('lilli')">Lilli Portfolio</a>
-                    <a onclick="showProject('recoil')">Recoil</a>
-                    <a onclick="showProject('botanical')">Botanical Editorial</a>
+                    <a href="#kaamos">Kaamos</a>
+                    <a href="#vivilecanarie">Vivilecanarie</a>
+                    <a href="#lilli">Lilli Portfolio</a>
+                    <a href="#recoil">Recoil</a>
+                    <a href="#botanical">Botanical Editorial</a>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-title">Video</div>
                 <div class="section-links">
-                    <a onclick="showProject('corsedimoto')">Corsedimoto.com</a>
-                    <a onclick="showProject('university')">University</a>
+                    <a href="#corsedimoto">Corsedimoto.com</a>
+                    <a href="#university">University</a>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-title">Events</div>
                 <div class="section-links">
-                    <a onclick="showProject('soupfm')">Soup.fm</a>
-                    <a onclick="showProject('vicentina')">Vicentina Foundation</a>
+                    <a href="#soupfm">Soup.fm</a>
+                    <a href="#vicentina">Vicentina Foundation</a>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-title">Graphics and visuals</div>
                 <div class="section-links">
-                    <a onclick="showProject('flyers')">Flyers</a>
-                    <a onclick="showProject('touchdesigner')">TouchDesigner</a>
+                    <a href="#flyers">Flyers</a>
+                    <a href="#touchdesigner">TouchDesigner</a>
                 </div>
             </div>
 
@@ -1107,6 +1114,11 @@
             // Clear header title
             document.getElementById('mobile-project-title').textContent = '';
 
+            // Clear the hash without adding a history entry
+            if (location.hash) {
+                history.replaceState(null, '', location.pathname + location.search);
+            }
+
             // Scroll to top
             if (isMobile()) {
                 window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1122,6 +1134,17 @@
                 window.location.href = 'index.html';
             }
         }
+
+        // ── Hash routing: makes every project deep-linkable, e.g. /lavori.html#kaamos ──
+        function openFromHash() {
+            const id = location.hash.slice(1);
+            if (id && projectNames[id]) {
+                showProject(id);
+            }
+        }
+
+        window.addEventListener('hashchange', openFromHash);
+        openFromHash();
     </script>
 </body>
 

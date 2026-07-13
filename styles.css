@@ -4,6 +4,7 @@ body {
     font-family: "Inter", sans-serif;
     background: rgb(255, 255, 255);
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
 }
 
 .text-container {
@@ -12,7 +13,8 @@ body {
     line-height: 1.6;
     z-index: 2;
     max-width: 800px;
-    margin: 0;  /* Keeping original alignment for desktop */
+    margin: 0;
+    /* Keeping original alignment for desktop */
     word-spacing: 5px;
     font-size: 16px;
 }
@@ -36,25 +38,9 @@ body {
     backface-visibility: hidden;
 }
 
-/* Mobile styles */
-@media (max-width: 768px) {
-    .text-container {
-        max-width: 100%;
-        padding: 18px;
-        font-size: 16px;
-        word-spacing: 3px;
-        margin: 0 auto; 
-        height: 100vh; 
-        box-sizing: border-box;
-        display: block; 
-        padding-top: 50vh; 
-        transform: translateY(-50%);
-        text-align: left; 
-    }
-}
-
 .word {
-    display: inline-block; /* Keep words inline */
+    display: inline-block;
+    /* Keep words inline */
     cursor: pointer;
     position: relative;
     letter-spacing: 0.02em;
@@ -82,27 +68,47 @@ body {
     text-decoration: underline;
 }
 
-.falling-word {
-    position: fixed;
-    pointer-events: none;
-    z-index: 1000;
-    margin: 0;
-    padding: 0;
-    font-family: "Inter", sans-serif;
-    font-weight: 400;
-    font-size: 16px;
-    transition: transform 0s linear;
-    color: #606060;
-    transform-origin: left top;
-    letter-spacing: 0.02em;
-    will-change: transform;
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
 .original-hidden {
     opacity: 0;
     transition: opacity 0.1s ease-out;
 }
 
-    
+/* Motion permission button (shown by JS on mobile only) */
+#motionBtn {
+    display: none;
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2000;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid #717171;
+    color: #0080ff;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .text-container {
+        max-width: 100%;
+        padding: 18px;
+        font-size: 16px;
+        word-spacing: 3px;
+        margin: 0 auto;
+        height: 100vh;
+        height: 100dvh;
+        /* dvh: stable centering with mobile browser UI bars */
+        box-sizing: border-box;
+        display: block;
+        padding-top: 50vh;
+        padding-top: 50dvh;
+        transform: translateY(-50%);
+        text-align: left;
+    }
+}
