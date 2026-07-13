@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Falling Words</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #f5f2ec;
+    font-family: Georgia, 'Times New Roman', serif;
+    touch-action: none;           /* let touch drag words instead of scrolling */
+    overscroll-behavior: none;
+  }
+
+  #text {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8vh 32px 0;
+    font-size: 22px;
+    line-height: 1.7;
+    color: #2b2925;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #text h1 {
+    font-size: 34px;
+    margin-bottom: 24px;
+    font-weight: normal;
+  }
+
+  @media (max-width: 600px) {
+    #text { font-size: 17px; padding: 6vh 18px 0; }
+    #text h1 { font-size: 26px; }
+  }
+
+  .w {
+    display: inline-block;
+    cursor: default;
+    opacity: 1;
+    transition: opacity 0.8s ease;
+  }
+
+  .w.gone {
+    opacity: 0;                 /* keeps layout, word itself has fallen */
+    pointer-events: none;
+  }
+
+  .falling {
+    position: fixed;
+    left: 0;
+    top: 0;
+    color: #2b2925;
+    white-space: nowrap;
+    will-change: transform, opacity;
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 0.4s ease;
+  }
+</style>
+</head>
+<body>
+
+<div id="text">
+  <h1>Lorem ipsum dolor sit amet</h1>
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+    non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+    doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore
+    veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+  </p>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- tuning ----------
+  const GRAVITY = 2600;          // px/s^2
+  const RESTITUTION = 0.35;      // floor bounce
+  const BODY_RESTITUTION = 0.25; // word vs word bounce
+  const WALL_RESTITUTION = 0.55;
+  const FRICTION = 0.85;
+  const AIR_DRAG = 0.999;
+  const SLEEP_SPEED = 22;        // px/s
+  const SLEEP_FRAMES = 12;
+  const RESPAWN_MS = 5000;       // word returns after this
+  const SOLVER_ITERATIONS = 2;
+  const FIXED_DT = 1 / 120;      // fixed physics step for stable, smooth sim
+
+  const bodies = [];
+
+  // ---------- split text into hoverable word spans ----------
+  function wrapWords(node) {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    for (const tn of textNodes) {
+      const frag = document.createDocumentFragment();
+      const parts = tn.textContent.split(/(\s+)/);
+      for (const p of parts) {
+        if (!p) continue;
+        if (/^\s+$/.test(p)) {
+          frag.appendChild(document.createTextNode(p));
+        } else {
+          const s = document.createElement('span');
+          s.className = 'w';
+          s.textContent = p;
+          frag.appendChild(s);
+        }
+      }
+      tn.parentNode.replaceChild(frag, tn);
+    }
+  }
+  wrapWords(document.getElementById('text'));
+
+  // ---------- detach a word ----------
+  function detach(t) {
+    if (!t || !t.classList || !t.classList.contains('w') || t.classList.contains('gone')) return;
+
+    const rect = t.getBoundingClientRect();
+    t.classList.add('gone');
+
+    const clone = document.createElement('span');
+    clone.className = 'falling';
+    clone.textContent = t.textContent;
+    clone.style.font = getComputedStyle(t).font; // match size on any screen
+    document.body.appendChild(clone);
+
+    const b = {
+      el: clone,
+      src: t,
+      x: rect.left,
+      y: rect.top,
+      w: rect.width,
+      h: rect.height,
+      vx: (Math.random() - 0.5) * 120,
+      vy: -Math.random() * 60,
+      invMass: 1 / Math.max(rect.width * rect.height, 1),
+      sleepCount: 0,
+      sleeping: false,
+      contactBelow: false,
+      bornAt: performance.now(),
+      dying: false
+    };
+    clone.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
+    bodies.push(b);
+  }
+
+  // mouse hover
+  document.addEventListener('mouseover', (e) => detach(e.target));
+
+  // touch: knock words loose by dragging a finger over them
+  function touchHandler(e) {
+    for (const touch of e.touches) {
+      detach(document.elementFromPoint(touch.clientX, touch.clientY));
+    }
+  }
+  document.addEventListener('touchstart', touchHandler, { passive: true });
+  document.addEventListener('touchmove', touchHandler, { passive: true });
+
+  // ---------- viewport & floor-jump on resize ----------
+  let vw = window.innerWidth;
+  let vh = window.innerHeight;
+  let floorVel = 0;
+  let lastResizeTime = performance.now();
+
+  function onResize() {
+    const now = performance.now();
+    const dt = Math.max((now - lastResizeTime) / 1000, 0.008);
+    const newVh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const newVw = window.innerWidth;
+
+    floorVel = (newVh - vh) / dt;
+    lastResizeTime = now;
+
+    if (newVh < vh) {
+      const kick = Math.max(-1500, floorVel);
+      for (const b of bodies) {
+        const floor = newVh - b.h;
+        if (b.y >= floor - 2) {
+          b.y = Math.min(b.y, floor);
+          b.vy = Math.min(b.vy, kick * (0.7 + Math.random() * 0.5));
+          b.vx += (Math.random() - 0.5) * 150;
+          wake(b);
+        }
+      }
+    }
+
+    if (newVw < vw) {
+      for (const b of bodies) {
+        if (b.x + b.w > newVw) {
+          b.x = newVw - b.w;
+          b.vx = -Math.abs(b.vx) - 80;
+          wake(b);
+        }
+      }
+    }
+
+    vw = newVw;
+    vh = newVh;
+  }
+  window.addEventListener('resize', onResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+
+  function wake(b) {
+    b.sleeping = false;
+    b.sleepCount = 0;
+  }
+  function wakeAll() {
+    for (const b of bodies) wake(b);
+  }
+
+  // ---------- respawn with fade ----------
+  function updateRespawns(now) {
+    for (let i = bodies.length - 1; i >= 0; i--) {
+      const b = bodies[i];
+      if (!b.dying && now - b.bornAt > RESPAWN_MS) {
+        b.dying = true;
+        b.el.style.opacity = '0';                    // fade the fallen copy out
+        const el = b.el, src = b.src;
+        setTimeout(() => {
+          el.remove();
+          src.classList.remove('gone');              // fade back into the text
+        }, 400);
+        bodies.splice(i, 1);
+        wakeAll(); // anything stacked on it should tumble
+      }
+    }
+  }
+
+  // ---------- physics ----------
+  function integrate(dt) {
+    for (const b of bodies) {
+      b.contactBelow = false;
+      if (b.sleeping) continue;
+      b.vy += GRAVITY * dt;
+      b.vx *= AIR_DRAG;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+    }
+  }
+
+  // sweep & prune on x + AABB impulse resolution
+  function resolveCollisions() {
+    bodies.sort((a, c) => a.x - c.x);
+
+    for (let i = 0; i < bodies.length; i++) {
+      const a = bodies[i];
+      for (let j = i + 1; j < bodies.length; j++) {
+        const c = bodies[j];
+        if (c.x > a.x + a.w) break; // no x overlap further right
+
+        const ox = Math.min(a.x + a.w, c.x + c.w) - Math.max(a.x, c.x);
+        const oy = Math.min(a.y + a.h, c.y + c.h) - Math.max(a.y, c.y);
+        if (ox <= 0 || oy <= 0) continue;
+
+        const total = a.invMass + c.invMass;
+        const aShare = a.invMass / total;
+        const cShare = c.invMass / total;
+
+        if (ox < oy) {
+          // separate on x
+          const dir = (a.x + a.w / 2) < (c.x + c.w / 2) ? -1 : 1;
+          a.x += dir * ox * aShare;
+          c.x -= dir * ox * cShare;
+          const rel = a.vx - c.vx;
+          if (rel * dir < 0) { // moving toward each other
+            const impulse = -(1 + BODY_RESTITUTION) * rel / total;
+            a.vx += impulse * a.invMass;
+            c.vx -= impulse * c.invMass;
+          }
+        } else {
+          // separate on y
+          const aAbove = (a.y + a.h / 2) < (c.y + c.h / 2);
+          const dir = aAbove ? -1 : 1;
+          a.y += dir * oy * aShare;
+          c.y -= dir * oy * cShare;
+          const rel = a.vy - c.vy;
+          if (rel * dir < 0) {
+            const impulse = -(1 + BODY_RESTITUTION) * rel / total;
+            a.vy += impulse * a.invMass;
+            c.vy -= impulse * c.invMass;
+            // friction on x when landing on each other
+            a.vx *= 0.96; c.vx *= 0.96;
+          }
+          if (aAbove) a.contactBelow = true; else c.contactBelow = true;
+        }
+
+        // waking: a moving body hitting a sleeper wakes it
+        const impact = Math.abs(a.vx - c.vx) + Math.abs(a.vy - c.vy);
+        if (impact > 40) { wake(a); wake(c); }
+      }
+    }
+  }
+
+  function resolveBounds() {
+    for (const b of bodies) {
+      if (b.sleeping) continue;
+      const floor = vh - b.h;
+
+      if (b.y >= floor) {
+        b.y = floor;
+        b.contactBelow = true;
+        if (Math.abs(b.vy) < 90) {
+          b.vy = 0;
+        } else {
+          b.vy = -b.vy * RESTITUTION;
+          b.vx *= FRICTION;
+        }
+      }
+      if (b.y < 0) { b.y = 0; b.vy = Math.abs(b.vy) * WALL_RESTITUTION; }
+      if (b.x < 0) { b.x = 0; b.vx = Math.abs(b.vx) * WALL_RESTITUTION; }
+      if (b.x + b.w > vw) { b.x = vw - b.w; b.vx = -Math.abs(b.vx) * WALL_RESTITUTION; }
+    }
+  }
+
+  function updateSleep() {
+    for (const b of bodies) {
+      if (b.sleeping) continue;
+      const speed = Math.abs(b.vx) + Math.abs(b.vy);
+      if (b.contactBelow && speed < SLEEP_SPEED) {
+        if (++b.sleepCount > SLEEP_FRAMES) {
+          b.sleeping = true;
+          b.vx = 0; b.vy = 0;
+        }
+      } else {
+        b.sleepCount = 0;
+      }
+    }
+  }
+
+  // ---------- main loop: fixed timestep, render once per frame ----------
+  let last = performance.now();
+  let accumulator = 0;
+
+  function frame(now) {
+    let elapsed = (now - last) / 1000;
+    last = now;
+    if (elapsed > 0.1) elapsed = 0.1; // tab was hidden
+
+    if (now - lastResizeTime > 120) floorVel = 0;
+
+    accumulator += elapsed;
+    while (accumulator >= FIXED_DT) {
+      integrate(FIXED_DT);
+      for (let k = 0; k < SOLVER_ITERATIONS; k++) resolveCollisions();
+      resolveBounds();
+      updateSleep();
+      accumulator -= FIXED_DT;
+    }
+
+    updateRespawns(now);
+
+    // single DOM write pass, GPU-composited transforms
+    for (const b of bodies) {
+      b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
