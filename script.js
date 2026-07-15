@@ -7,6 +7,10 @@ const Engine = Matter.Engine,
 const isChrome = navigator.userAgent.indexOf('Chrome') > -1;
 const isMobileView = () => window.innerWidth <= 768;
 
+// Respect the user's OS-level "reduce motion" preference: the text is still
+// rebuilt word by word (same layout), but nothing falls and no physics runs.
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // Sleeping is desktop-only: it lets settled bodies rest cheaply and wake on
 // window resize. On phones it proved unreliable (words dozing off mid-air),
 // so there the freeze is handled manually in the render loop instead.
@@ -20,7 +24,7 @@ const engine = Engine.create({
 const setGravity = () => {
     engine.world.gravity.x = 0;
     engine.world.gravity.y = isChrome ?
-        (isMobileView() ? 1.0 : 0.6) :
+        (isMobileView() ? 1.4 : 1.1) :
         (isMobileView() ? 2.0 : 1.3);
 };
 setGravity();
@@ -67,10 +71,10 @@ const links = {
     'Audience Zero': 'https://www.audiencezero.com',
     'Corsedimoto.com': 'https://www.corsedimoto.com/',
     'contact': 'mailto:davidebocchi@icloud.com',
-    'here': 'lavori.html',
+    'here': 'works.html',
 };
 
-const text = 'Hello there! I’m (Davide), I’m a creative technologist, exploring AI. After graduating in communication design at (Politecnico di Milano), I worked for three years as a freelancer, collaborating with (Audience Zero) and (Corsedimoto.com) while delivering solo projects. In the meantime, I dedicated time to cofounding a music and art events collective. You can check some of my work (here). If you want to grab a coffee and talk about your feelings or just hire me, you can (contact) me whenever :]';
+const text = 'Hello there! I’m (Davide), a designer and AI-native builder: I design things and build them using AI. After graduating in communication design at (Politecnico di Milano), I worked for three years as a freelancer, collaborating with (Audience Zero) and (Corsedimoto.com) while delivering solo projects. In the meantime, I dedicated time to cofounding a music and art events collective. You can check some of my work (here). If you want to grab a coffee and talk about your feelings or just hire me, you can (contact) me whenever :]';
 
 
 function parseText(text) {
@@ -131,7 +135,7 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         {
             restitution: isChrome ? 0.15 : (isMobile ? 0.2 : 0.3),
             friction: isChrome ? 0.85 : 0.8,
-            frictionAir: isChrome ? (isMobile ? 0.04 : 0.025) : (isMobile ? 0.02 : 0.01),
+            frictionAir: isChrome ? (isMobile ? 0.03 : 0.015) : (isMobile ? 0.02 : 0.01),
             angle: 0,
             density: isChrome ? (isMobile ? 0.003 : 0.0015) : (isMobile ? 0.002 : 0.001),
             // fall asleep quickly once settled (default is 60 frames)
@@ -139,7 +143,7 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         }
     );
 
-    const velocityFactor = isChrome ? 0.7 : 1;
+    const velocityFactor = isChrome ? 0.85 : 1;
     Body.setVelocity(body, {
         x: velocityX * velocityFactor,
         y: velocityY * velocityFactor
@@ -311,6 +315,9 @@ function setupSwipeHandling() {
 
 const segments = parseText(text);
 
+// Remove the static SEO/no-JS fallback before building the interactive version
+container.textContent = '';
+
 segments.forEach((segment) => {
     if (segment.isStatic) {
         const link = document.createElement('a');
@@ -351,15 +358,17 @@ segments.forEach((segment) => {
                 span._drop = handleWordFall;
 
                 let mouseEnterTimer;
-                span.addEventListener('mouseenter', () => {
-                    mouseEnterTimer = setTimeout(() => handleWordFall(), 10);
-                });
-                span.addEventListener('mouseleave', () => {
-                    if (mouseEnterTimer) clearTimeout(mouseEnterTimer);
-                });
+                if (!prefersReducedMotion) {
+                    span.addEventListener('mouseenter', () => {
+                        mouseEnterTimer = setTimeout(() => handleWordFall(), 10);
+                    });
+                    span.addEventListener('mouseleave', () => {
+                        if (mouseEnterTimer) clearTimeout(mouseEnterTimer);
+                    });
+                }
 
 
-                if (isMobileView()) {
+                if (!prefersReducedMotion && isMobileView()) {
                     span.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         touchStartTime = Date.now();
@@ -479,7 +488,9 @@ function setupMouseSweep() {
         lastT = t;
     });
 }
-setupMouseSweep();
+if (!prefersReducedMotion) {
+    setupMouseSweep();
 
-// Initialize swipe handling
-setupSwipeHandling();
+    // Initialize swipe handling
+    setupSwipeHandling();
+}

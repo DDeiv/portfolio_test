@@ -28,3 +28,8 @@ build/
 # Cache
 .cache/
 .parcel-cache/
+
+# private working files
+case-study-worksheet.md
+.DS_Store
+_originals/
