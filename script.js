@@ -120,6 +120,20 @@ let touchY = 0;
 let touchStartX = 0;
 let touchStartY = 0;
 
+// Hard ceiling on live dropped words. Nothing else removes bodies, so without
+// this the world, the DOM and the per-frame render loop all grow without bound
+// and the page stalls after sustained interaction. Oldest word retires first.
+const maxFallingItems = () => (isMobileView() ? 40 : 120);
+
+function retireOldestItem() {
+    const old = fallingItems.shift();
+    if (!old) return;
+    World.remove(engine.world, old.body);
+    fallenBodies.delete(old.body);
+    fallingWords.delete(old.el);
+    old.el.remove();
+}
+
 function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
     const isMobile = isMobileView();
     const bodyWidth = text.length * (isMobile ? 6 : 8);
@@ -166,8 +180,13 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         x0: bodyX,
         y0: bodyY,
         sleepPainted: false,
-        stillFrames: 0
+        stillFrames: 0,
+        retired: false
     });
+
+    while (fallingItems.length > maxFallingItems()) {
+        retireOldestItem();
+    }
 }
 
 // ── Physics + render loop ──────────────────────────────────────────────────
@@ -200,6 +219,10 @@ function frame(now) {
         const it = fallingItems[i];
         const body = it.body;
 
+        // Retired words are out of the physics world entirely and already
+        // painted at their final resting transform: nothing left to do.
+        if (it.retired) continue;
+
         // Settled words don't move: paint them once, then skip until they wake
         if (body.isSleeping || body.isStatic) {
             if (it.sleepPainted) continue;
@@ -214,7 +237,14 @@ function frame(now) {
                 if (body.speed < 0.05 && body.angularSpeed < 0.05) {
                     it.stillFrames++;
                     if (it.stillFrames > 20) {
-                        Body.setStatic(body, true);
+                        // Take it out of the world rather than just making it
+                        // static: a static body still costs collision checks
+                        // every step, and this one will never move again. The
+                        // transform below paints its final position once, then
+                        // the `retired` check above skips it for good.
+                        World.remove(engine.world, body);
+                        fallenBodies.delete(body);
+                        it.retired = true;
                     }
                 } else {
                     it.stillFrames = 0;
@@ -260,12 +290,13 @@ function checkWordInSwipePath(wordElement, currentX, currentY) {
             vy = (dy / magnitude) * speedFactor;
         }
 
-        createFallingWord(wordElement.textContent, rect, vx, vy);
-        wordElement.classList.add('original-hidden');
-
-        setTimeout(() => {
-            wordElement.classList.remove('original-hidden');
-        }, 5000);
+        // Delegate to the word's own guarded drop handler rather than
+        // spawning here: it owns the `original-hidden` flag and the restore
+        // timeout, so a word can only be in flight once. Spawning directly
+        // let this scanner re-drop the same word on every touchmove, which
+        // leaked bodies until the frame loop stalled.
+        if (!wordElement._drop) return false;
+        wordElement._drop(vx, vy);
 
         return true;
     }
@@ -287,20 +318,38 @@ function setupSwipeHandling() {
             });
         });
 
+        // Touch events fire faster than the screen repaints, and each sweep
+        // does a getBoundingClientRect() per word (a forced layout). Coalesce
+        // to at most one sweep per animation frame.
+        let scanQueued = false;
+        let pendingX = 0;
+        let pendingY = 0;
+
         document.addEventListener('touchmove', (e) => {
             if (!touchActive) return;
 
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
+            pendingX = e.touches[0].clientX;
+            pendingY = e.touches[0].clientY;
 
-            wordsMap.forEach((wordEl) => {
-                if (wordEl.classList.contains('static') && !wordEl.classList.contains('original-hidden')) {
-                    checkWordInSwipePath(wordEl, currentX, currentY);
-                }
+            if (scanQueued) return;
+            scanQueued = true;
+
+            requestAnimationFrame(() => {
+                scanQueued = false;
+                if (!touchActive) return;
+
+                const currentX = pendingX;
+                const currentY = pendingY;
+
+                wordsMap.forEach((wordEl) => {
+                    if (wordEl.classList.contains('static') && !wordEl.classList.contains('original-hidden')) {
+                        checkWordInSwipePath(wordEl, currentX, currentY);
+                    }
+                });
+
+                touchX = currentX;
+                touchY = currentY;
             });
-
-            touchX = currentX;
-            touchY = currentY;
         });
 
         document.addEventListener('touchend', () => {
