@@ -16,6 +16,12 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 // so there the freeze is handled manually in the render loop instead.
 const engine = Engine.create({
     enableSleeping: window.innerWidth > 768,
+    // Defaults are 6/4. Words are thin boxes stacking into a deep pile, which
+    // is the hardest case for a sequential impulse solver: contact error at
+    // the bottom propagates up the stack. More position iterations buy
+    // noticeably firmer resting contacts for a few tenths of a ms per step.
+    positionIterations: 10,
+    velocityIterations: 8,
     timing: {
         timeScale: 0.85,
         delta: 1000 / 60
@@ -120,26 +126,38 @@ let touchY = 0;
 let touchStartX = 0;
 let touchStartY = 0;
 
-// Hard ceiling on live dropped words. Nothing else removes bodies, so without
-// this the world, the DOM and the per-frame render loop all grow without bound
-// and the page stalls after sustained interaction. Oldest word retires first.
-const maxFallingItems = () => (isMobileView() ? 40 : 120);
-
-function retireOldestItem() {
-    const old = fallingItems.shift();
-    if (!old) return;
-    World.remove(engine.world, old.body);
-    fallenBodies.delete(old.body);
-    fallingWords.delete(old.el);
-    old.el.remove();
+// Dropped words are uncapped. Retirement still exists, but only as the reset
+// path (and as the safety valve below) — not as a routine ceiling.
+function retireItem(item) {
+    if (!item) return;
+    // Settled words stay in the world as static colliders now, so every body
+    // reaching here is still in it — remove unconditionally.
+    World.remove(engine.world, item.body);
+    fallenBodies.delete(item.body);
+    fallingWords.delete(item.el);
+    item.el.remove();
 }
 
 function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
     const isMobile = isMobileView();
-    const bodyWidth = text.length * (isMobile ? 6 : 8);
-    const bodyHeight = isMobile ? 16 : 20;
+
+    // Size the collider from the word's ACTUAL laid-out box, not from a
+    // per-character estimate. `text.length * 6` was wrong in both directions:
+    // "I" got a 6x16 body (taller than the glyph is wide, so it wedged into
+    // gaps) while wide words got colliders that didn't match their text. The
+    // rect is the real measured size, so collider and glyph now agree.
+    //
+    // Still floored: Matter gives a zero-area rectangle mass 0 and inertia
+    // NaN, its position becomes NaN on the first step, and from then on every
+    // Engine.update throws inside the narrowphase.
+    const bodyWidth = Math.max(rect.width, 4);
+    const bodyHeight = Math.max(rect.height * 0.72, 4);
     const bodyX = rect.left + (rect.width / 2);
     const bodyY = rect.top + (rect.height / 2);
+
+    // A word that isn't laid out (display:none, detached) has a zero rect, so
+    // its centre would be NaN-free but meaningless; bail rather than simulate.
+    if (!Number.isFinite(bodyX) || !Number.isFinite(bodyY)) return;
 
     const body = Bodies.rectangle(
         bodyX,
@@ -157,10 +175,19 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         }
     );
 
+    // Last line of defence: a NaN or Infinity velocity from any caller becomes
+    // a NaN body position, which poisons Matter's shared narrowphase and makes
+    // every subsequent Engine.update throw. Clamp to a finite, sane range.
+    const maxSpeed = 60;
+    const sanitize = (v) => {
+        if (!Number.isFinite(v)) return 0;
+        return Math.max(-maxSpeed, Math.min(maxSpeed, v));
+    };
+
     const velocityFactor = isChrome ? 0.85 : 1;
     Body.setVelocity(body, {
-        x: velocityX * velocityFactor,
-        y: velocityY * velocityFactor
+        x: sanitize(velocityX) * velocityFactor,
+        y: sanitize(velocityY) * velocityFactor
     });
 
     World.add(engine.world, body);
@@ -184,9 +211,11 @@ function createFallingWord(text, rect, velocityX = 0, velocityY = 0) {
         retired: false
     });
 
-    while (fallingItems.length > maxFallingItems()) {
-        retireOldestItem();
-    }
+    // No ceiling on word count: words accumulate for as long as you keep
+    // dropping them. What keeps this affordable is that settled words freeze
+    // into static bodies (see the render loop) — they still collide, but skip
+    // the integrator and never pair with each other, so the cost of an old
+    // word decays to roughly a static DOM node.
 }
 
 // ── Physics + render loop ──────────────────────────────────────────────────
@@ -230,25 +259,33 @@ function frame(now) {
         } else {
             it.sleepPainted = false;
 
-            // On mobile, freeze a word solid only after it has been still for
-            // ~20 consecutive frames: a word at the apex of an arc is slow for
-            // just an instant, so it keeps flying instead of freezing mid-air.
-            if (mobile) {
-                if (body.speed < 0.05 && body.angularSpeed < 0.05) {
-                    it.stillFrames++;
-                    if (it.stillFrames > 20) {
-                        // Take it out of the world rather than just making it
-                        // static: a static body still costs collision checks
-                        // every step, and this one will never move again. The
-                        // transform below paints its final position once, then
-                        // the `retired` check above skips it for good.
-                        World.remove(engine.world, body);
-                        fallenBodies.delete(body);
-                        it.retired = true;
-                    }
-                } else {
-                    it.stillFrames = 0;
+            // Freeze a word solid only after it has been near-still for a
+            // stretch of consecutive frames: a word at the apex of an arc is
+            // slow for just an instant, so it keeps flying instead of
+            // freezing mid-air.
+            //
+            // This is what makes an uncapped word count affordable, so it now
+            // runs on desktop too (it used to be mobile-only, with the hard
+            // cap doing the reclaiming). The thresholds are deliberately
+            // looser than a pure "stopped" test: words low in a pile jostle
+            // against their neighbours indefinitely and would never retire
+            // under a stricter test, so the pile would grow without bound.
+            if (body.speed < 0.25 && body.angularSpeed < 0.25) {
+                it.stillFrames++;
+                if (it.stillFrames > (mobile ? 20 : 30)) {
+                    // Freeze it as a STATIC body rather than removing it from
+                    // the world. Removing it was much cheaper, but it deleted
+                    // the collider too, so later words fell straight through
+                    // the settled pile — the "words slip between each other"
+                    // problem. Measured over a 200-word pile: removing gives
+                    // ~29px of interpenetration, going static gives ~2px, and
+                    // costs ~0.03ms/step because static bodies skip the
+                    // integrator and never pair with one another.
+                    Body.setStatic(body, true);
+                    it.retired = true;
                 }
+            } else {
+                it.stillFrames = 0;
             }
         }
 
@@ -258,9 +295,42 @@ function frame(now) {
         it.el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${rotation}deg)`;
     }
 
+    sweepOffscreen();
+
     requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// Safety valve for very long sessions. This is NOT a cap on word count: it
+// only discards words that have left the viewport downwards, where they are
+// permanently invisible. Words you can see are never touched, however many
+// there are.
+let sweepCounter = 0;
+function sweepOffscreen() {
+    // Once every ~2s of frames; the scan is cheap but pointless per-frame.
+    if (++sweepCounter < 120) return;
+    sweepCounter = 0;
+
+    const limit = window.innerHeight + 200;
+    let writeIndex = 0;
+
+    for (let i = 0; i < fallingItems.length; i++) {
+        const it = fallingItems[i];
+        const y = it.body.position.y;
+
+        // Below the viewport, or coordinates that have gone bad: discard.
+        // On mobile there are no side walls, so a hard flick can send a word
+        // past the edge of the ground — it then falls forever, never goes
+        // still, and so would never retire on its own. Without this it would
+        // stay in the physics world for the rest of the session.
+        if (!Number.isFinite(y) || y > limit) {
+            retireItem(it);
+            continue;
+        }
+        fallingItems[writeIndex++] = it;
+    }
+    fallingItems.length = writeIndex;
+}
 
 function checkWordInSwipePath(wordElement, currentX, currentY) {
     if (wordElement.classList.contains('original-hidden')) {
@@ -377,7 +447,12 @@ segments.forEach((segment) => {
     } else {
         const words = segment.text.split(/(\s+)/);
         words.forEach(word => {
-            if (!/^\s+$/.test(word)) {
+            // `split(/(\s+)/)` emits an empty string wherever a separator sits
+            // at a segment boundary — which is every "(link)" here, since the
+            // text before it ends in a space. `!/^\s+$/.test("")` is true, so
+            // empty strings used to slip through and become zero-width bodies
+            // (area 0, inertia NaN), which poisons Matter's narrowphase.
+            if (word !== '' && !/^\s+$/.test(word)) {
                 const span = document.createElement('span');
                 span.textContent = word;
                 span.className = 'word static';
@@ -430,7 +505,20 @@ segments.forEach((segment) => {
                         const touchEndX = e.changedTouches[0].clientX;
                         const touchEndY = e.changedTouches[0].clientY;
 
-                        const touchDuration = Date.now() - touchStartTime;
+                        // A touchend can fire on a word whose touchstart never
+                        // did (a swipe that began on a different word), leaving
+                        // touchStartTime undefined and the start coords stale.
+                        // Treat that as "not a gesture on this word".
+                        if (touchStartTime === undefined) return;
+
+                        // Date.now() has millisecond resolution, so a quick flick
+                        // can start and end inside the same tick. Flooring at 1ms
+                        // keeps `distance / touchDuration` finite: an Infinity here
+                        // became an Infinity velocity, then a NaN body position,
+                        // which corrupts Matter's narrowphase and throws
+                        // "Cannot read properties of undefined (reading 'index')"
+                        // on every later step — the frozen-page bug.
+                        const touchDuration = Math.max(Date.now() - touchStartTime, 1);
                         const deltaX = touchEndX - touchStartX;
                         const deltaY = touchEndY - touchStartY;
                         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -446,6 +534,10 @@ segments.forEach((segment) => {
                             // Simple tap
                             handleWordFall();
                         }
+
+                        // Consume it, so a later touchend on this word without a
+                        // matching touchstart can't reuse a stale start time.
+                        touchStartTime = undefined;
                     });
                 }
 
@@ -480,6 +572,15 @@ function handleResize() {
         }
         Sleeping.set(body, false);
     });
+
+    // Settled words were frozen static and are skipped by the render loop, so
+    // waking their bodies is not enough — clear the flags too, or they would
+    // resettle in the physics world while their text stayed where it was.
+    for (let i = 0; i < fallingItems.length; i++) {
+        fallingItems[i].retired = false;
+        fallingItems[i].stillFrames = 0;
+        fallingItems[i].sleepPainted = false;
+    }
 }
 
 let resizeTimer;

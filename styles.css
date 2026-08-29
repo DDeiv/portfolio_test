@@ -30,7 +30,10 @@ body {
     font-size: 16px;
     transition: transform 0s linear;
     color: #606060;
-    transform-origin: left top;
+    /* The physics body rotates about its centre, so the text must too:
+       with left-top origin a tilted word is drawn up to ~24px away from
+       its own collider, which reads as words slipping through each other. */
+    transform-origin: center center;
     letter-spacing: 0.02em;
     will-change: transform;
     transform: translateZ(0);
